@@ -1,0 +1,2710 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#08090C">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Agência BC">
+<title>Agência BC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Agência BC · quadro de controle.
+   Layout: barra fixa com abas; conteúdo em blocos separados por filete (não em cartões);
+   tabelas densas; o farol (verde/amarelo/vermelho, sempre com texto) é o sinal principal. */
+:root {
+  /* Paleta da identidade Bruno Coelho: preto, lima e azul. Escuro é o padrão da marca. */
+  --bg: #08090C;
+  --surface: #111319;
+  --surface-2: #1A1D25;
+  --ink: #F4F4F0;
+  --ink-2: #A3A5AE;
+  --ink-3: #80838D;
+  --line: #262932;
+  --accent: #C6FF3D;
+  --accent-ink: #0A0D02;
+  --accent-soft: #171C08;
+  --blue: #3D5CFF;
+  --blue-txt: #7F95FF;
+  --ok: #4CC38A;      --ok-soft: #10281C;
+  --warn: #E3B341;    --warn-soft: #2F2509;
+  --bad: #FF7A70;     --bad-soft: #351513;
+  --f-display: 'Anton', 'Arial Narrow', Impact, sans-serif;
+  --f-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --f-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --raio: 0px;
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --bg: #F4F4F0; --surface: #FFFFFF; --surface-2: #E9E9E3; --ink: #08090C; --ink-2: #4A4C55; --ink-3: #6B6D76;
+  --line: #D4D4CC; --accent: #3D5CFF; --accent-ink: #FFFFFF; --accent-soft: #E3E8FF;
+  --blue: #3D5CFF; --blue-txt: #3D5CFF;
+  --ok: #1B7F4B; --ok-soft: #DCF0E4; --warn: #8F5B00; --warn-soft: #F7EACB; --bad: #B3261E; --bad-soft: #F8DEDB;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--f-body); font-size: 15px; line-height: 1.5;
+  margin: 0;
+}
+h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+h1 { font-size: 28px; line-height: 1.1; font-weight: 800; }
+h2 { font-size: 13px; font-weight: 700; font-family: var(--f-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-2); }
+h3 { font-size: 18px; font-weight: 700; }
+p { margin: 0; }
+a { color: var(--accent); }
+button, input, select, textarea { font: inherit; color: inherit; }
+.mono { font-family: var(--f-mono); }
+.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.muted { color: var(--ink-2); }
+.faint { color: var(--ink-3); }
+.small { font-size: 13px; }
+.nowrap { white-space: nowrap; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ───────── barra superior ───────── */
+.topbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: var(--bg); border-bottom: 1px solid var(--line);
+}
+.topbar-in { max-width: 1120px; margin: 0 auto; padding: 10px 16px 0; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.marca { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); }
+.marca-sigla {
+  width: 30px; height: 30px; display: grid; place-items: center;
+  background: var(--accent); color: var(--accent-ink); border-radius: 4px;
+  font-family: var(--f-display); font-weight: 800; font-size: 14px; letter-spacing: 0.02em;
+}
+.marca-nome { font-family: var(--f-display); font-weight: 800; font-size: 18px; letter-spacing: -0.01em; }
+.topbar-acoes { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.nav { max-width: 1120px; margin: 0 auto; padding: 0 16px; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+.nav::-webkit-scrollbar { display: none; }
+.nav a {
+  padding: 10px 12px 9px; text-decoration: none; color: var(--ink-2); white-space: nowrap;
+  font-weight: 500; font-size: 14px; border-bottom: 2px solid transparent;
+}
+.nav a:hover { color: var(--ink); }
+.nav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
+
+.pagina { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 22px 56px; }
+.pagehead { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px 24px; flex-wrap: wrap; margin-bottom: 18px; }
+.pagehead .sub { color: var(--ink-2); margin-top: 4px; }
+.pagehead-acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ───────── botões ───────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 36px; padding: 6px 13px; border-radius: var(--raio); cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  font-weight: 500; font-size: 14px; text-decoration: none; line-height: 1.2;
+}
+.btn:hover { border-color: var(--ink-3); }
+.btn.primario { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.btn.primario:hover { filter: brightness(1.08); }
+.btn.perigo { color: var(--bad); border-color: var(--bad); background: transparent; }
+.btn.mini { min-height: 30px; padding: 3px 10px; font-size: 13px; }
+.btn.fantasma { border-color: transparent; background: transparent; color: var(--ink-2); }
+.btn.fantasma:hover { color: var(--ink); background: var(--surface-2); }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font: inherit; text-decoration: underline; text-underline-offset: 2px; }
+
+/* ───────── faixa de indicadores ───────── */
+.faixa { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); border-block: 1px solid var(--line); margin-bottom: 26px; }
+.faixa > div { padding: 12px 16px 12px 0; }
+.faixa > div + div { border-left: 1px solid var(--line); padding-left: 16px; }
+.faixa .rot { font-family: var(--f-mono); font-size: 11.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); }
+.faixa .val { font-family: var(--f-display); font-weight: 800; font-size: 26px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.faixa .nota { font-size: 12.5px; color: var(--ink-2); }
+@media (max-width: 560px) {
+  .faixa > div:nth-child(odd) { border-left: 0; padding-left: 0; }
+  .faixa > div:nth-child(n+3) { border-top: 1px solid var(--line); }
+}
+
+/* ───────── blocos e colunas ───────── */
+.colunas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 28px 40px; align-items: start; }
+.bloco { border-top: 2px solid var(--ink); padding-top: 10px; min-width: 0; margin-bottom: 4px; }
+.bloco-cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.bloco + .bloco { margin-top: 0; }
+.espaco { margin-top: 28px; }
+.vazio { color: var(--ink-2); padding: 14px 0; font-size: 14px; }
+.aviso { background: var(--accent-soft); border: 1px solid var(--line); border-radius: var(--raio); padding: 10px 14px; margin-bottom: 20px; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; font-size: 14px; }
+.aviso.warn { background: var(--warn-soft); }
+
+/* ───────── listas de linhas ───────── */
+.linhas { list-style: none; margin: 0; padding: 0; }
+.linhas > li { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.linhas > li:last-child { border-bottom: 0; }
+.linhas .corpo { min-width: 0; flex: 1; }
+.linhas .tit { font-weight: 600; overflow-wrap: anywhere; }
+.linhas .det { color: var(--ink-2); font-size: 13.5px; overflow-wrap: anywhere; }
+.linhas .acoes { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+
+/* ───────── pílulas ───────── */
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px 2px 7px; border-radius: 999px; font-size: 12.5px; font-weight: 600; white-space: nowrap; line-height: 1.5; background: var(--surface-2); color: var(--ink); }
+.pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+.pill.verde, .pill.otimo, .pill.positivo { background: var(--ok-soft); color: var(--ok); }
+.pill.amarelo, .pill.regular, .pill.neutro { background: var(--warn-soft); color: var(--warn); }
+.pill.vermelho, .pill.ruim, .pill.negativo { background: var(--bad-soft); color: var(--bad); }
+.pill.neutra { background: var(--surface-2); color: var(--ink-2); }
+.pill.sem-ponto::before { display: none; }
+.pill.sem-ponto { padding-left: 9px; }
+.tag { display: inline-block; padding: 0 7px; border-radius: 3px; font-size: 12px; font-weight: 600; background: var(--surface-2); color: var(--ink-2); font-family: var(--f-mono); white-space: nowrap; }
+.tag.acc { background: var(--accent-soft); color: var(--accent); }
+.curva { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 4px; font-family: var(--f-mono); font-weight: 700; font-size: 12px; background: var(--surface-2); color: var(--ink-2); }
+.curva.A { background: var(--accent); color: var(--accent-ink); }
+.curva.B { background: var(--accent-soft); color: var(--accent); }
+
+/* ───────── tabelas ───────── */
+.rolagem { overflow-x: auto; max-width: 100%; }
+.tabela { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tabela th { text-align: left; font-family: var(--f-mono); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); padding: 8px 12px 8px 0; border-bottom: 1px solid var(--ink-3); white-space: nowrap; }
+.tabela th.num { text-align: right; }
+.tabela td { padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.tabela td:last-child, .tabela th:last-child { padding-right: 0; }
+.tabela tr.clicavel { cursor: pointer; }
+.tabela tr.clicavel:hover td { background: var(--surface-2); }
+.tabela tfoot td { border-bottom: 0; font-weight: 600; }
+.tabela .nome { font-weight: 600; overflow-wrap: anywhere; }
+.tabela .truncar { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); }
+@media (max-width: 720px) { .hide-s { display: none; } }
+
+/* ───────── formulários e diálogos ───────── */
+dialog { border: 1px solid var(--line); border-radius: 10px; padding: 0; background: var(--surface); color: var(--ink); width: min(720px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); }
+dialog.estreito { width: min(520px, calc(100vw - 24px)); }
+dialog::backdrop { background: rgba(10, 14, 16, .55); }
+.dlg { padding: 20px 20px 16px; display: flex; flex-direction: column; gap: 16px; }
+.dlg-cab { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.dlg-cab p { color: var(--ink-2); font-size: 14px; margin-top: 2px; }
+.dlg-rodape { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; position: sticky; bottom: 0; background: var(--surface); padding-top: 10px; border-top: 1px solid var(--line); }
+.dlg-rodape .esq { margin-right: auto; }
+.grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px 14px; }
+.campo { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.campo.largo { grid-column: 1 / -1; }
+.campo > label, .rotulo { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.campo small { color: var(--ink-3); font-size: 12.5px; }
+input[type="text"], input[type="tel"], input[type="number"], input[type="date"], input[type="email"], input[type="password"], input[type="search"], select, textarea {
+  width: 100%; min-height: 38px; padding: 7px 10px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--raio); color: var(--ink);
+}
+textarea { min-height: 76px; resize: vertical; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.secao { border-top: 1px solid var(--line); padding-top: 14px; display: flex; flex-direction: column; gap: 12px; }
+.secao > h2 { margin-bottom: -2px; }
+.erro-form { color: var(--bad); font-size: 14px; font-weight: 500; }
+
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--raio); overflow: hidden; background: var(--bg); }
+.seg label { margin: 0; cursor: pointer; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg span { display: grid; place-items: center; width: 40px; height: 36px; font-family: var(--f-mono); font-weight: 600; color: var(--ink-2); border-right: 1px solid var(--line); }
+.seg label:last-child span { border-right: 0; }
+.seg input:checked + span { background: var(--accent); color: var(--accent-ink); }
+.seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: -2px; }
+.crit { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 14px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.crit:last-of-type { border-bottom: 0; }
+.crit .q { font-size: 13px; color: var(--ink-2); }
+.crit .nome { font-weight: 600; }
+.crit .peso { font-family: var(--f-mono); font-size: 11.5px; color: var(--ink-3); margin-left: 6px; }
+@media (max-width: 560px) { .crit { grid-template-columns: 1fr; } }
+.notaviva { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 10px 12px; background: var(--surface-2); border-radius: var(--raio); }
+.notaviva .grande { font-family: var(--f-display); font-weight: 800; font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; }
+.checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 4px 16px; }
+.check { display: flex; gap: 9px; align-items: flex-start; padding: 5px 0; cursor: pointer; font-size: 14px; }
+.check input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--accent); flex: none; }
+.cascata { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--raio); overflow: hidden; }
+.cascata label { display: grid; grid-template-columns: auto 22px minmax(0, 1fr); gap: 4px 10px; align-items: start; padding: 9px 12px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.cascata label:last-child { border-bottom: 0; }
+.cascata label:has(input:checked) { background: var(--accent-soft); }
+.cascata input { margin-top: 4px; accent-color: var(--accent); }
+.cascata .ord { font-family: var(--f-mono); font-size: 12px; color: var(--ink-3); padding-top: 2px; }
+.cascata .t { font-weight: 600; }
+.cascata .d { font-size: 13px; color: var(--ink-2); }
+
+/* ───────── abas internas, progresso ───────── */
+.abas { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin-bottom: 18px; overflow-x: auto; scrollbar-width: none; }
+.abas button { background: none; border: 0; padding: 8px 14px; cursor: pointer; color: var(--ink-2); border-bottom: 2px solid transparent; margin-bottom: -1px; font-weight: 500; white-space: nowrap; }
+.abas button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
+.progresso { height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+.progresso > i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+.progresso.ok > i { background: var(--ok); }
+.resumo-pros { display: flex; gap: 20px 32px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+.resumo-pros .item { min-width: 150px; }
+.resumo-pros .rot { font-family: var(--f-mono); font-size: 11.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); }
+.resumo-pros .val { font-family: var(--f-display); font-weight: 800; font-size: 24px; font-variant-numeric: tabular-nums; }
+
+/* ───────── cliente: cabeçalho ───────── */
+.cli-cab { display: flex; justify-content: space-between; gap: 16px 28px; flex-wrap: wrap; align-items: flex-start; margin-bottom: 18px; }
+.cli-cab .motivos { margin-top: 8px; display: flex; flex-direction: column; gap: 2px; font-size: 14px; color: var(--ink-2); }
+.cli-cab .motivos li { list-style: none; }
+.cli-cab ul { margin: 0; padding: 0; }
+.voltar { display: inline-block; margin-bottom: 8px; font-size: 14px; color: var(--ink-2); text-decoration: none; }
+.voltar:hover { color: var(--ink); }
+.graficos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 20px 32px; margin-bottom: 22px; }
+.graf-tit { font-size: 13px; font-weight: 600; color: var(--ink-2); margin-bottom: 4px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+svg.graf { width: 100%; height: auto; display: block; overflow: visible; }
+svg.graf text { fill: var(--ink-2); font-family: var(--f-mono); font-size: 11px; }
+svg.graf .grade { stroke: var(--line); stroke-width: 1; fill: none; }
+svg.graf .eixo { stroke: var(--ink-3); stroke-width: 1; }
+.legenda { display: flex; gap: 6px 18px; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); margin: 6px 0 2px; }
+.legenda i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.dica { position: fixed; z-index: 60; pointer-events: none; background: var(--ink); color: var(--bg); padding: 6px 10px; border-radius: 4px; font-size: 12.5px; line-height: 1.35; max-width: 240px; }
+
+/* ───────── quadro (kanban) ───────── */
+.quadro { display: grid; grid-auto-flow: column; grid-auto-columns: 252px; gap: 12px; overflow-x: auto; padding-bottom: 10px; align-items: start; }
+.col { background: var(--surface-2); border-radius: 8px; padding: 8px; min-height: 120px; }
+.col-cab { display: flex; justify-content: space-between; align-items: center; padding: 2px 4px 8px; font-weight: 700; font-size: 13.5px; }
+.col-cab span { font-family: var(--f-mono); font-weight: 500; color: var(--ink-2); }
+.cartao { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 9px 10px; margin-bottom: 8px; cursor: pointer; display: flex; flex-direction: column; gap: 4px; }
+.cartao:hover { border-color: var(--ink-3); }
+.cartao .t { font-weight: 600; font-size: 14px; overflow-wrap: anywhere; }
+.cartao .d { font-size: 12.5px; color: var(--ink-2); overflow-wrap: anywhere; }
+.cartao .linha { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.atrasado { color: var(--bad); font-weight: 600; }
+.hoje-c { color: var(--warn); font-weight: 600; }
+
+.filtros { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
+.filtros select, .filtros input { width: auto; min-width: 140px; flex: 1 1 140px; max-width: 260px; }
+
+/* ───────── barras horizontais (motivos, funil) ───────── */
+.barras { display: flex; flex-direction: column; gap: 8px; }
+.barra { display: grid; grid-template-columns: minmax(110px, 190px) minmax(0, 1fr) 84px; gap: 4px 12px; align-items: center; font-size: 14px; }
+.barra .trilho { height: 10px; background: var(--surface-2); border-radius: 0 4px 4px 0; position: relative; }
+.barra .trilho i { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 0 4px 4px 0; min-width: 2px; }
+.barra .v { font-family: var(--f-mono); text-align: right; font-size: 13px; white-space: nowrap; }
+@media (max-width: 560px) { .barra { grid-template-columns: minmax(0, 1fr) 70px; } .barra .trilho { grid-column: 1 / -1; grid-row: 2; } }
+
+/* ───────── importação ───────── */
+.mapa { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 10px 14px; }
+.previa { max-height: 220px; overflow: auto; border: 1px solid var(--line); border-radius: var(--raio); }
+.previa table { font-size: 12.5px; }
+.previa td, .previa th { padding: 5px 10px 5px 8px; white-space: nowrap; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 80; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 6px; font-size: 14px; max-width: calc(100vw - 32px); box-shadow: 0 6px 24px rgba(0,0,0,.25); }
+.toast.erro { background: var(--bad); color: var(--bg); }
+.login { max-width: 380px; margin: 12vh auto 0; padding-inline: 16px; display: flex; flex-direction: column; gap: 16px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .progresso > i { transition: width .3s ease; }
+}
+
+
+/* ───────── identidade Bruno Coelho: cantos retos, Anton em caixa-alta, losangos, filetes ───────── */
+html { scroll-behavior: smooth; }
+body { -webkit-font-smoothing: antialiased; }
+h1 { font-weight: 400; text-transform: uppercase; letter-spacing: 0.005em; line-height: 0.98; font-size: clamp(30px, 5vw, 44px); }
+h2 { font-family: var(--f-body); font-size: 12px; font-weight: 600; letter-spacing: 0.14em; color: var(--blue-txt); display: inline-flex; align-items: center; gap: 10px; }
+h2::before { content: ""; width: 16px; height: 1px; background: currentColor; flex: none; }
+h3 { font-weight: 700; font-family: var(--f-body); }
+.faixa .val, .resumo-pros .val { font-weight: 400; letter-spacing: 0.01em; }
+.faixa .rot, .resumo-pros .rot { font-family: var(--f-body); font-weight: 600; letter-spacing: 0.12em; }
+.topbar { background: rgba(8, 9, 12, .86); backdrop-filter: blur(10px); }
+:root[data-theme="light"] .topbar { background: rgba(244, 244, 240, .88); }
+.marca-sigla { width: 38px; height: 38px; background: transparent; color: var(--ink); border: 1.5px solid var(--line); border-radius: 0; font-weight: 400; font-size: 15px; position: relative; padding-bottom: 6px; }
+.marca-sigla::after { content: ""; position: absolute; bottom: 5px; left: 50%; width: 9px; height: 2px; margin-left: -9px; background: var(--blue); box-shadow: 12px 0 0 -0.5px var(--accent); }
+.marca-nome { font-family: var(--f-body); font-weight: 800; font-size: 15px; letter-spacing: 0.02em; text-transform: uppercase; }
+.nav a { font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600; }
+.nav a[aria-current="page"] { border-bottom-color: var(--accent); }
+.btn.primario { font-weight: 800; letter-spacing: 0.02em; }
+.btn.primario:hover { filter: none; transform: translateY(-1px); box-shadow: 0 10px 28px -12px var(--accent); }
+.bloco { border-top: 1px solid var(--line-strong, var(--line)); }
+.pill { border-radius: 0; }
+.pill::before { border-radius: 0; width: 7px; height: 7px; transform: rotate(45deg); }
+.progresso, .progresso > i, .barra .trilho, .barra .trilho i { border-radius: 0; }
+dialog { border-radius: 0; border-color: var(--line); }
+dialog::backdrop { background: rgba(0, 0, 0, .7); }
+.toast, .dica, .tag, .curva, .col, .cartao { border-radius: 0; }
+.toast.erro { color: var(--bg); }
+.legenda i { border-radius: 0; }
+a { color: var(--accent); }
+:root[data-theme="light"] a { color: var(--blue); }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn.primario:hover { transform: none; } }
+
+/* ───────── prospecção: layout do painel ───────── */
+.pros-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; margin-bottom: 22px; }
+.pill-marca { display: inline-block; padding: 7px 14px; background: var(--accent); color: var(--accent-ink); font-weight: 800; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
+.pros-meta { display: flex; align-items: center; gap: 8px 20px; flex-wrap: wrap; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.pros-meta label { display: inline-flex; align-items: center; gap: 8px; }
+.pros-meta input { width: 64px; min-height: 30px; padding: 3px 8px; text-align: center; }
+.losango { display: inline-block; width: 9px; height: 9px; background: var(--accent); transform: rotate(45deg); margin-right: 8px; vertical-align: 1px; }
+.pros-h1 { font-size: clamp(32px, 6vw, 62px); max-width: 920px; line-height: .96; }
+.marca-texto { background: var(--accent); color: var(--accent-ink); padding: 0 .12em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.pros-sub { max-width: 640px; margin-top: 18px; color: var(--ink-2); font-size: 16px; line-height: 1.65; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 10px; margin: 26px 0 18px; }
+.kpi { border: 1px solid var(--line); background: var(--surface); padding: 12px 14px; min-width: 0; }
+.kpi .rot { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); min-height: 2.6em; }
+.kpi .val { font-family: var(--f-display); font-size: 30px; line-height: 1.1; margin-top: 4px; }
+.kpi.dest { background: var(--accent); border-color: var(--accent); }
+.kpi.dest .rot, .kpi.dest .val { color: var(--accent-ink); }
+.pra-hoje { border: 1px solid var(--blue); margin-bottom: 18px; background: var(--surface); }
+.ph-cab { background: var(--blue); color: #fff; display: flex; justify-content: space-between; padding: 10px 16px; font-weight: 800; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+.ph-corpo { padding: 12px 16px; }
+.ph-ok { color: var(--ink-2); } .ph-ok strong { color: var(--ok); }
+.barra-fer { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
+.barra-fer input[type="search"] { width: 220px; max-width: 100%; }
+.barra-fer select { width: auto; min-width: 0; max-width: 100%; }
+.barra-fer-fim { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+.seg label { cursor: pointer; } .seg label input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label:has(input:checked) span { background: var(--accent); color: var(--accent-ink); }
+.seg label span { display: inline-flex; align-items: center; min-height: 36px; }
+
+.novo-contato { border: 1px solid var(--line); background: var(--surface); padding: 20px; margin-bottom: 18px; display: flex; flex-direction: column; gap: 16px; }
+.nc-cab { display: flex; gap: 12px; align-items: flex-start; }
+.nc-cab h3 { font-size: 14px; font-weight: 800; letter-spacing: .06em; font-family: var(--f-body); }
+.nc-mais { width: 30px; height: 30px; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); font-weight: 800; flex: none; }
+.nc-grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); gap: 14px; }
+.nc-rodape { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+
+.chip { display: inline-block; padding: 1px 9px; font-size: 12px; font-weight: 700; border: 1px solid var(--line); color: var(--ink-2); white-space: nowrap; }
+.chip.hoje { background: var(--blue); border-color: var(--blue); color: #fff; }
+.chip.atrasado { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+.chip.acc { border-color: var(--blue); color: var(--blue-txt); }
+.ico-linha { display: inline-flex; gap: 6px; }
+.ico-c { display: inline-grid; place-items: center; min-width: 30px; height: 30px; padding: 0 6px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-size: 12px; font-weight: 800; text-decoration: none; }
+a.ico-c:hover { border-color: var(--accent); color: var(--accent); }
+.ico-c.off { opacity: .35; }
+.btn-av { background: var(--accent); color: var(--accent-ink); border: 0; font-weight: 800; font-size: 13px; padding: 5px 12px; cursor: pointer; }
+.btn-av:hover { filter: brightness(1.08); }
+.cartao { gap: 8px; border-color: var(--line); padding: 12px; }
+.cartao:hover, .cartao:focus-visible { border-color: var(--accent); }
+.cartao .t { font-size: 15px; font-weight: 700; }
+.quadro { grid-auto-columns: 270px; }
+.col { padding: 10px; }
+.col-cab { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; font-family: var(--f-body); }
+.col-cab span { background: var(--accent); color: var(--accent-ink); padding: 0 9px; font-weight: 800; font-size: 12px; font-family: var(--f-body); }
+
+/* gaveta lateral */
+dialog.gaveta { margin: 0 0 0 auto; width: min(460px, 100vw); height: 100dvh; max-height: 100dvh; border-width: 0 0 0 1px; border-radius: 0; animation: gv-in .22s ease-out; }
+@keyframes gv-in { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { dialog.gaveta { animation: none; } }
+.gv { padding: 0; gap: 0; min-height: 100%; }
+.gv-cab { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 20px; background: var(--bg); border-bottom: 2px solid var(--accent); position: sticky; top: 0; z-index: 2; }
+.gv-cab h3 { font-family: var(--f-body); font-size: 19px; font-weight: 800; }
+.gv-cab p { color: var(--ink-2); font-size: 13px; margin-top: 2px; }
+.gv-x { background: none; border: 0; color: var(--ink); font-size: 28px; line-height: 1; cursor: pointer; padding: 0 4px; }
+.gv-corpo { padding: 20px; display: flex; flex-direction: column; gap: 16px; flex: 1; }
+.gv-links { display: flex; }
+.gv-mais summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--ink-2); }
+.gv-mais-corpo { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.gv-acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+.gv-hist { border-top: 1px solid var(--line); padding-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+.gv-meta { border-top: 1px solid var(--line); padding-top: 12px; }
+.gv-rodape { position: sticky; bottom: 0; display: flex; gap: 8px; flex-wrap: wrap; padding: 14px 20px; background: var(--surface); border-top: 1px solid var(--line); }
+.gv-rodape .perigo { margin-left: auto; }
+
+/* espaço da logo */
+.marca-logo { height: 38px; min-width: 38px; max-width: 160px; object-fit: contain; flex: none; display: block; }
+.marca-logo.vazio { width: 38px; border: 1px dashed var(--line); }
+
+/* celular */
+@media (max-width: 640px) {
+  body { font-size: 15px; }
+  .btn { min-height: 44px; } .btn.mini { min-height: 40px; }
+  input[type="text"], input[type="tel"], input[type="number"], input[type="date"], input[type="email"], input[type="password"], input[type="search"], select, textarea { min-height: 44px; font-size: 16px; }
+  .nav a { padding: 12px 12px 11px; }
+  .pagehead-acoes { width: 100%; }
+  .barra-fer > * { flex: 1 1 100%; } .barra-fer .btn-av { flex: none; }
+  .barra-fer .seg { display: flex; } .barra-fer .seg label { flex: 1; text-align: center; } .barra-fer .seg label span { width: 100% !important; justify-content: center; }
+  .barra-fer-fim { margin-left: 0; } .barra-fer-fim .btn { flex: 1; }
+  .barra-fer input[type="search"] { width: 100%; }
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .quadro { grid-auto-columns: 82vw; scroll-snap-type: x mandatory; }
+  .quadro .col { scroll-snap-align: start; }
+  .linhas li { flex-wrap: wrap; } .linhas .acoes { width: 100%; }
+  dialog { width: 100vw; max-width: 100vw; max-height: 100dvh; margin: 0; }
+  .gv-rodape .perigo { margin-left: 0; }
+  .topbar-in { padding-top: 8px; }
+}
+@supports (padding: max(0px)) { body { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); } }
+
+</style>
+</head>
+<body>
+<div id="app"><p style="padding:24px">Carregando…</p></div>
+<div id="dialogos"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+/* Agência BC · configuração de ambiente.
+   MODE 'local'    -> dados no navegador (localStorage). Usado para validar a ferramenta.
+   MODE 'supabase' -> dados no Supabase, com login. Preencher SUPABASE_URL e SUPABASE_KEY
+                      (a chave publicável/anon; nunca a service_role). */
+window.BC_CONFIG = {
+  MODE: 'local',
+  SUPABASE_URL: '',
+  SUPABASE_KEY: '',
+  LOGO: ''   // ex.: 'assets/logo.png' (ou .svg). Vazio = espaço reservado no topo.
+};
+
+</script>
+<script>
+/* Agência BC · cálculos puros (sem DOM). Rodam no navegador e no Node (tests/). */
+(function (root) {
+  'use strict';
+
+  // ───────────── constantes ─────────────
+  var ETAPAS = [
+    { id: 'novo', nome: 'A contatar' },
+    { id: 'abordado', nome: 'Abordado' },
+    { id: 'respondeu', nome: 'Respondeu' },
+    { id: 'diagnostico', nome: 'Mini-diagnóstico' },
+    { id: 'reuniao', nome: 'Reunião' },
+    { id: 'proposta', nome: 'Proposta' },
+    { id: 'fechado', nome: 'Fechado' },
+    { id: 'perdido', nome: 'Perdido' }
+  ];
+  var ORDEM_FUNIL = ['novo', 'abordado', 'respondeu', 'diagnostico', 'reuniao', 'proposta', 'fechado'];
+
+  // Pesquisa de relacionamento: 5 critérios, nota 1 a 5. A confiança pesa o dobro.
+  var CRITERIOS = [
+    { id: 'confianca', nome: 'Confiança e abertura', peso: 2,
+      pergunta: 'O cliente ouve você como conselheiro ou só como quem executa pedidos?',
+      ancoras: { 1: 'Desconfia e rebate tudo', 3: 'Confia no básico, hesita no resto', 5: 'Pede opinião e divide o contexto do negócio' } },
+    { id: 'aderencia', nome: 'Aderência ao combinado', peso: 1,
+      pergunta: 'Ele aplicou o que foi orientado no relatório da semana?',
+      ancoras: { 1: 'Não aplicou nada', 3: 'Aplicou o essencial, com atraso', 5: 'Aplica tudo, rápido' } },
+    { id: 'postura', nome: 'Postura diante de problemas', peso: 1,
+      pergunta: 'Quando o resultado cai, ele encara junto ou procura culpado?',
+      ancoras: { 1: 'Culpa a agência', 3: 'Escuta, mas reclama', 5: 'Assume a parte dele e age' } },
+    { id: 'presenca', nome: 'Presença e resposta', peso: 1,
+      pergunta: 'Ele responde e participa durante a semana?',
+      ancoras: { 1: 'Some por dias', 3: 'Responde, com atrasos pontuais', 5: 'Ativo e rápido' } },
+    { id: 'insumos', nome: 'Entrega de insumos', peso: 1,
+      pergunta: 'Ele envia acessos, retorno dos leads e materiais pedidos?',
+      ancoras: { 1: 'Não envia nada', 3: 'Envia o básico, fora do prazo', 5: 'Envia tudo, no prazo' } }
+  ];
+
+  // Sinais de desengajamento (antecipam churn). peso = pontos tirados do health score.
+  var GATILHOS = [
+    { id: 'sumiu', texto: 'Passou mais de 5 dias sem responder', curto: 'sumiu', peso: 10 },
+    { id: 'cobranca', texto: 'Só responde com cobrança constante', curto: 'responde só com cobrança', peso: 7 },
+    { id: 'reunioes', texto: 'Falta ou desmarca as reuniões combinadas', curto: 'falta a reuniões', peso: 7 },
+    { id: 'nao_implementa', texto: 'Não implementa o que foi pedido', curto: 'não implementa', peso: 7 },
+    { id: 'reduziu_verba', texto: 'Reduziu a verba ou o investimento', curto: 'reduziu a verba', peso: 10 },
+    { id: 'nao_acessa', texto: 'Não abre o relatório nem o painel', curto: 'não abre o relatório', peso: 7 },
+    { id: 'atraso_pagto', texto: 'Atrasa pagamentos com frequência', curto: 'atrasa pagamentos', peso: 10 },
+    { id: 'desinteresse', texto: 'Perdeu o interesse em ideias novas', curto: 'sem interesse em ideias', peso: 7 },
+    { id: 'frio', texto: 'Ficou seco: só trata de assunto objetivo', curto: 'relação fria', peso: 7 },
+    { id: 'sem_vitoria', texto: 'Não comemora mais os resultados', curto: 'não comemora resultados', peso: 7 }
+  ];
+
+  // Motivos de saída em cascata: percorre de cima para baixo e para no primeiro que explica.
+  var MOTIVOS_SAIDA = [
+    { id: 'erro_critico', nome: 'Erro crítico', def: 'Falha grave de operação na campanha ou na entrega.' },
+    { id: 'performance', nome: 'Performance', def: 'O serviço contratado não chegou a ser entregue.' },
+    { id: 'alinhamento', nome: 'Falta de alinhamento', def: 'Foi entregue, mas o cliente não percebeu o valor.' },
+    { id: 'estrutura', nome: 'Falta de estrutura interna', def: 'Entreguei, mas ele não tinha equipe ou atendimento para aproveitar.' },
+    { id: 'perspectiva', nome: 'Falta de perspectiva', def: 'Serviço e relação bons, mas sem visão de futuro; trocou por uma promessa maior.' },
+    { id: 'relacionamento', nome: 'Relacionamento', def: 'A relação se rompeu por conflito ou desrespeito.' },
+    { id: 'troca_gestor', nome: 'Troca de gestor', def: 'O gestor mudou e o vínculo não continuou.' },
+    { id: 'saida_contato', nome: 'Saída do contato', def: 'Quem contratou deixou a empresa.' },
+    { id: 'escopo', nome: 'Escopo', def: 'Precisou de algo que não ofereço e buscou fora.' },
+    { id: 'negocio', nome: 'Negócio', def: 'Uma decisão dele sobre a empresa tornou o trabalho inviável.' }
+  ];
+
+  var PROB_RENOVACAO_PADRAO = { verde: 0.85, amarelo: 0.6, vermelho: 0.3 };
+  var PROB_ETAPA_PADRAO = { abordado: 0.02, respondeu: 0.06, diagnostico: 0.12, reuniao: 0.25, proposta: 0.45 };
+
+  // ───────────── datas (sempre texto AAAA-MM-DD, fuso local) ─────────────
+  var DIA = 86400000;
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function toISO(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function parseISO(s) { var p = String(s).slice(0, 10).split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+  var _hoje = null;
+  function hoje() { return _hoje || toISO(new Date()); }
+  function setHoje(iso) { _hoje = iso; }
+  function addDias(iso, n) { var d = parseISO(iso); d.setDate(d.getDate() + n); return toISO(d); }
+  function addMeses(iso, n) {
+    var d = parseISO(iso), dia = d.getDate();
+    d.setDate(1); d.setMonth(d.getMonth() + n);
+    var ult = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    d.setDate(Math.min(dia, ult));
+    return toISO(d);
+  }
+  function diffDias(a, b) { return Math.round((parseISO(b) - parseISO(a)) / DIA); } // b - a
+  function inicioSemana(iso) { var d = parseISO(iso); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return toISO(d); }
+  function mesDe(iso) { return String(iso).slice(0, 7); }
+  function primeiroDiaMes(iso) { return mesDe(iso) + '-01'; }
+  function ultimoDiaMes(iso) { var d = parseISO(iso); return toISO(new Date(d.getFullYear(), d.getMonth() + 1, 0)); }
+  function addMesesMes(iso, n) { return mesDe(addMeses(primeiroDiaMes(iso), n)); }
+  function diaUtil(iso) { var w = parseISO(iso).getDay(); return w !== 0 && w !== 6; }
+  function dataLocalDe(ts) { return toISO(new Date(ts)); }
+  function r1(n) { return Math.round(n * 10) / 10; }
+  function soma(arr, f) { return arr.reduce(function (s, x) { return s + (Number(f(x)) || 0); }, 0); }
+
+  // ───────────── cliente: tempo de casa, valor, contrato, curva ─────────────
+  function fimVida(c, h) { return (c.status === 'churn' && c.churn_data) ? c.churn_data : h; }
+  function ltMeses(c, h) { h = h || hoje(); return Math.max(0, diffDias(c.inicio, fimVida(c, h))) / 30.4375; }
+  function ltv(c, h) { return ltMeses(c, h) * (Number(c.mensalidade) || 0); }
+  function fimContrato(c) { return addMeses(c.inicio, Number(c.duracao_meses) || 0); }
+  function diasParaFim(c, h) { return diffDias(h || hoje(), fimContrato(c)); }
+
+  // Curva por percentil de mensalidade entre os ativos: A = 20% de cima, B = próximos 30%, C = resto.
+  function curvaABC(ativos) {
+    var ord = ativos.slice().sort(function (a, b) {
+      return (Number(b.mensalidade) - Number(a.mensalidade)) || String(a.nome).localeCompare(String(b.nome));
+    });
+    var n = ord.length, out = {}, ultimoValor = null, ultimoPos = 0;
+    ord.forEach(function (c, i) {
+      var v = Number(c.mensalidade);
+      if (v !== ultimoValor) { ultimoValor = v; ultimoPos = i; }   // empates dividem a mesma curva
+      var p = ultimoPos / n;
+      out[c.id] = p < 0.2 ? 'A' : (p < 0.5 ? 'B' : 'C');
+    });
+    return out;
+  }
+
+  // ───────────── relacionamento ─────────────
+  function notaRelacionamento(r) {
+    var s = 0, pesos = 0;
+    for (var i = 0; i < CRITERIOS.length; i++) {
+      var c = CRITERIOS[i], v = Number(r[c.id]);
+      if (!(v >= 1 && v <= 5)) return null;
+      s += v * c.peso; pesos += c.peso;
+    }
+    return r1(s / pesos * 2);
+  }
+  function faixaRelacionamento(n) { return n >= 9 ? 'otimo' : (n >= 7 ? 'regular' : 'ruim'); }
+  function exigeJustificativa(n) { return n != null && (n < 7 || n >= 9.5); }
+
+  // ───────────── resultado ─────────────
+  function cpl(investimento, leads) {
+    var i = Number(investimento), l = Number(leads);
+    return (investimento != null && leads != null && l > 0 && i >= 0) ? i / l : null;
+  }
+
+  function fmt1(n) { return (Math.round(n * 10) / 10).toFixed(1).replace('.', ','); }
+  function fmtBRL(n) { return 'R$ ' + (Math.round(n * 100) / 100).toFixed(2).replace('.', ','); }
+
+  // ───────────── health score ─────────────
+  // Sinais: check-ins, relacionamento, feedbacks, resultado vs meta e sinais de desengajamento.
+  function saude(c, checkins, feedbacks, h) {
+    h = h || hoje();
+    var motivos = [], score = 100;
+    function pen(n, t) { score -= n; motivos.push({ peso: n, texto: t }); }
+
+    var cks = checkins.filter(function (x) { return x.cliente_id === c.id; })
+      .sort(function (a, b) { return a.semana < b.semana ? 1 : (a.semana > b.semana ? -1 : 0); });
+    var fbs = feedbacks.filter(function (x) { return x.cliente_id === c.id; });
+    var diasCasa = diffDias(c.inicio, h);
+    var ult = cks[0];
+
+    // 1) ritmo de check-in
+    if (ult) {
+      var dd = diffDias(ult.semana, h);
+      if (dd >= 21) pen(15, 'Sem check-in há ' + Math.floor(dd / 7) + ' semanas');
+      else if (dd >= 14) pen(6, 'Check-in da semana passada não foi feito');
+    } else if (diasCasa > 14) {
+      pen(10, 'Nenhum check-in registrado');
+    }
+
+    // 2) relacionamento
+    var comRel = cks.filter(function (x) { return x.nota_rel != null; });
+    if (comRel.length) {
+      var n = Number(comRel[0].nota_rel);
+      if (n < 7) pen(30, 'Relacionamento ' + fmt1(n) + ' (abaixo de 7)');
+      else if (n < 9) pen(8, 'Relacionamento regular (' + fmt1(n) + ')');
+      if (comRel[1]) {
+        var queda = Number(comRel[1].nota_rel) - n;
+        if (queda >= 1.5) pen(10, 'Nota de relacionamento caiu ' + fmt1(queda) + ' pontos');
+      }
+    }
+
+    // 3) feedbacks negativos nos últimos 30 dias
+    var neg = fbs.filter(function (f) {
+      var d = diffDias(f.data, h);
+      return f.tom === 'negativo' && d >= 0 && d <= 30;
+    }).length;
+    if (neg) pen(Math.min(30, 15 * neg), neg + (neg > 1 ? ' feedbacks negativos' : ' feedback negativo') + ' em 30 dias');
+
+    // 4) resultado contra a meta
+    if (ult && ult.leads != null && Number(c.meta_leads_semana) > 0) {
+      var rz = Number(ult.leads) / Number(c.meta_leads_semana);
+      var pc = Math.round(rz * 100);
+      if (rz < 0.4) pen(25, 'Leads em ' + pc + '% da meta da semana');
+      else if (rz < 0.7) pen(12, 'Leads em ' + pc + '% da meta da semana');
+    }
+    if (ult && Number(c.meta_cpl) > 0) {
+      var cp = cpl(ult.investimento, ult.leads);
+      if (cp != null) {
+        if (cp > c.meta_cpl * 1.5) pen(12, 'CPL ' + fmtBRL(cp) + ' (meta ' + fmtBRL(Number(c.meta_cpl)) + ')');
+        else if (cp > c.meta_cpl * 1.2) pen(6, 'CPL ' + fmtBRL(cp) + ' (meta ' + fmtBRL(Number(c.meta_cpl)) + ')');
+      }
+    }
+    if (ult && cks[1] && ult.leads != null && cks[1].leads != null &&
+        Number(cks[1].leads) >= 5 && Number(ult.leads) <= Number(cks[1].leads) * 0.6) {
+      var q = Math.round((1 - Number(ult.leads) / Number(cks[1].leads)) * 100);
+      pen(8, 'Leads caíram ' + q + '% sobre a semana anterior');
+    }
+
+    // 5) sinais de desengajamento marcados no último check-in
+    if (ult && diffDias(ult.semana, h) <= 13 && ult.gatilhos && ult.gatilhos.length) {
+      var tot = 0, nomes = [];
+      ult.gatilhos.forEach(function (id) {
+        var g = GATILHOS.filter(function (x) { return x.id === id; })[0];
+        if (g) { tot += g.peso; nomes.push(g.curto); }
+      });
+      if (nomes.length) pen(Math.min(35, tot), nomes.length + (nomes.length > 1 ? ' sinais' : ' sinal') + ' de desengajamento: ' + nomes.join(', '));
+    }
+
+    score = Math.max(0, score);
+    var farol = score >= 75 ? 'verde' : (score >= 50 ? 'amarelo' : 'vermelho');
+    motivos.sort(function (a, b) { return b.peso - a.peso; });
+    var dfim = diasParaFim(c, h);
+    return {
+      score: score, farol: farol, motivos: motivos,
+      renovacao: dfim <= 45,           // contrato acaba em até 45 dias (ou já passou)
+      diasFim: dfim,
+      novo90: diasCasa < 91
+    };
+  }
+
+  // ───────────── churn ─────────────
+  function estatChurn(clientes, h) {
+    h = h || hoje();
+    var perdidos = clientes.filter(function (c) { return c.status === 'churn' && c.churn_data; });
+    var porMotivo = {};
+    perdidos.forEach(function (c) { var k = c.churn_motivo || 'sem_motivo'; porMotivo[k] = (porMotivo[k] || 0) + 1; });
+    var meses = [];
+    for (var i = 11; i >= 0; i--) {
+      var mes = addMesesMes(h, -i), ini = mes + '-01', fim = ultimoDiaMes(ini);
+      var sai = perdidos.filter(function (c) { return c.churn_data >= ini && c.churn_data <= fim; });
+      var ativosIni = clientes.filter(function (c) {
+        return c.inicio < ini && (c.status !== 'churn' || !c.churn_data || c.churn_data >= ini);
+      }).length;
+      meses.push({
+        mes: mes, saidas: sai.length, ativosInicio: ativosIni,
+        churnPct: ativosIni ? sai.length / ativosIni * 100 : null,
+        ltMedio: sai.length ? soma(sai, function (c) { return ltMeses(c, h); }) / sai.length : null,
+        ltvMedio: sai.length ? soma(sai, function (c) { return ltv(c, h); }) / sai.length : null,
+        mrrPerdido: soma(sai, function (c) { return c.mensalidade; })
+      });
+    }
+    return {
+      perdidos: perdidos, porMotivo: porMotivo, meses: meses,
+      ltMedio: perdidos.length ? soma(perdidos, function (c) { return ltMeses(c, h); }) / perdidos.length : null,
+      ltvMedio: perdidos.length ? soma(perdidos, function (c) { return ltv(c, h); }) / perdidos.length : null
+    };
+  }
+
+  // ───────────── MRR: histórico, previsão, pipeline, concentração ─────────────
+  function mrrEm(clientes, iso) {
+    return soma(clientes.filter(function (c) {
+      return c.inicio <= iso && (c.status !== 'churn' || !c.churn_data || c.churn_data > iso);
+    }), function (c) { return c.mensalidade; });
+  }
+  function historicoMrr(clientes, h, n) {
+    h = h || hoje(); n = n || 6;
+    var out = [];
+    for (var i = n - 1; i >= 0; i--) {
+      var mes = addMesesMes(h, -i), ini = mes + '-01';
+      var fim = i === 0 ? h : ultimoDiaMes(ini);
+      out.push({
+        mes: mes, mrr: mrrEm(clientes, fim),
+        novo: soma(clientes.filter(function (c) { return mesDe(c.inicio) === mes; }), function (c) { return c.mensalidade; }),
+        perdido: soma(clientes.filter(function (c) { return c.status === 'churn' && c.churn_data && mesDe(c.churn_data) === mes; }), function (c) { return c.mensalidade; })
+      });
+    }
+    return out;
+  }
+  function mesesEntre(isoA, isoB) { // meses de calendário de A até B
+    var a = parseISO(isoA), b = parseISO(isoB);
+    return (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());
+  }
+  // contratado = contratos vigentes; esperado = contratado + renovações ponderadas pela probabilidade do farol
+  function previsaoMrr(clientes, farolPorId, prob, h, meses) {
+    h = h || hoje(); meses = meses || 6; prob = prob || PROB_RENOVACAO_PADRAO;
+    var ativos = clientes.filter(function (c) { return c.status !== 'churn'; });
+    var out = [];
+    for (var t = 0; t < meses; t++) {
+      var mes = addMesesMes(h, t), ini = mes + '-01', contratado = 0, esperado = 0;
+      ativos.forEach(function (c) {
+        var m = Number(c.mensalidade) || 0, fim = fimContrato(c);
+        if (t === 0 || fim >= ini) { contratado += m; esperado += m; return; }
+        var dur = Math.max(1, Number(c.duracao_meses) || 1);
+        var k = Math.floor(Math.max(0, mesesEntre(fim, ini)) / dur) + 1;
+        var p = prob[farolPorId[c.id] || 'amarelo'];
+        if (p == null) p = 0.6;
+        esperado += m * Math.pow(p, k);
+      });
+      out.push({ mes: mes, contratado: contratado, esperado: esperado });
+    }
+    return out;
+  }
+  function pipelinePonderado(prospects, probEtapa, ticket) {
+    probEtapa = probEtapa || PROB_ETAPA_PADRAO;
+    var n = 0, mrr = 0, porEtapa = {};
+    prospects.forEach(function (p) {
+      var pr = probEtapa[p.etapa];
+      if (pr == null) return;
+      n++; mrr += pr * ticket;
+      porEtapa[p.etapa] = (porEtapa[p.etapa] || 0) + 1;
+    });
+    return { n: n, mrr: mrr, porEtapa: porEtapa };
+  }
+  function concentracao(ativos) {
+    var vals = ativos.map(function (c) { return Number(c.mensalidade) || 0; }).sort(function (a, b) { return b - a; });
+    var tot = vals.reduce(function (s, v) { return s + v; }, 0);
+    if (!tot) return { total: 0, top1: 0, top3: 0 };
+    return { total: tot, top1: vals[0] / tot, top3: (vals[0] + (vals[1] || 0) + (vals[2] || 0)) / tot };
+  }
+
+  // ───────────── prospecção ─────────────
+  function etapaMax(p) {
+    if (p.etapa_max && ORDEM_FUNIL.indexOf(p.etapa_max) >= 0) return p.etapa_max;
+    return ORDEM_FUNIL.indexOf(p.etapa) >= 0 ? p.etapa : 'abordado';
+  }
+  function funil(prospects) {
+    var total = prospects.length;
+    var lista = ORDEM_FUNIL.map(function (id, i) {
+      var n = prospects.filter(function (p) { return ORDEM_FUNIL.indexOf(etapaMax(p)) >= i; }).length;
+      return { id: id, nome: ETAPAS.filter(function (e) { return e.id === id; })[0].nome, n: n };
+    });
+    lista.forEach(function (e, i) {
+      e.deAnterior = i === 0 ? null : (lista[i - 1].n ? e.n / lista[i - 1].n : null);
+      e.doTotal = total ? e.n / total : null;
+    });
+    return lista;
+  }
+  // datas ISO dos toques -> toques de hoje e sequência de dias úteis batendo a meta
+  function sequencia(datasToques, meta, h) {
+    h = h || hoje();
+    var cont = {};
+    datasToques.forEach(function (d) { cont[d] = (cont[d] || 0) + 1; });
+    var hojeN = cont[h] || 0, streak = 0;
+    if (hojeN >= meta) streak++;
+    var d = addDias(h, -1), guarda = 0;
+    while (guarda++ < 400) {
+      var n = cont[d] || 0;
+      if (diaUtil(d)) { if (n >= meta) streak++; else break; }
+      else if (n >= meta) streak++;      // fim de semana trabalhado conta; folga não quebra
+      d = addDias(d, -1);
+    }
+    return { hoje: hojeN, streak: streak };
+  }
+
+  // ───────────── importação de planilha (CSV) ─────────────
+  function parseCSV(texto) {
+    texto = String(texto).replace(/^﻿/, '');
+    var primeira = texto.split(/\r?\n/)[0] || '';
+    var delim = [',', ';', '\t'].map(function (d) { return [d, primeira.split(d).length - 1]; })
+      .sort(function (a, b) { return b[1] - a[1]; })[0][0];
+    var rows = [], row = [], campo = '', aspas = false;
+    for (var i = 0; i < texto.length; i++) {
+      var ch = texto[i];
+      if (aspas) {
+        if (ch === '"') { if (texto[i + 1] === '"') { campo += '"'; i++; } else aspas = false; }
+        else campo += ch;
+      } else if (ch === '"') aspas = true;
+      else if (ch === delim) { row.push(campo); campo = ''; }
+      else if (ch === '\n' || ch === '\r') {
+        if (ch === '\r' && texto[i + 1] === '\n') i++;
+        row.push(campo); rows.push(row); row = []; campo = '';
+      } else campo += ch;
+    }
+    if (campo !== '' || row.length) { row.push(campo); rows.push(row); }
+    rows = rows.filter(function (r) { return r.some(function (x) { return String(x).trim() !== ''; }); });
+    if (!rows.length) return { delim: delim, headers: [], rows: [] };
+    return { delim: delim, headers: rows[0].map(function (x) { return String(x).trim(); }), rows: rows.slice(1) };
+  }
+  function semAcento(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+  var PADROES = {
+    telefone: /(telefone|whats|celular|fone|\btel\b)/,
+    email: /(e-?mail)/,
+    instagram: /(instagram|insta\b|^ig$|@)/,
+    cidade: /(cidade|municipio)/,
+    nicho: /(nicho|segmento|categoria|ramo)/,
+    negocio: /(empresa|negocio|clinica|estabelecimento|razao|fantasia|loja)/,
+    nome: /^(nome|contato|responsavel|nome do contato|proprietari)/
+  };
+  function adivinharMapeamento(headers) {
+    var mapa = {}, usados = {};
+    ['telefone', 'email', 'instagram', 'cidade', 'nicho', 'negocio', 'nome'].forEach(function (campo) {
+      for (var i = 0; i < headers.length; i++) {
+        if (usados[i]) continue;
+        if (PADROES[campo].test(semAcento(headers[i]))) { mapa[campo] = i; usados[i] = true; return; }
+      }
+      mapa[campo] = -1;
+    });
+    return mapa;
+  }
+  function normalizarTelefone(s) {
+    var d = String(s || '').replace(/\D/g, '');
+    if (d.length === 10 || d.length === 11) return '55' + d;
+    if ((d.length === 12 || d.length === 13) && d.indexOf('55') === 0) return d;
+    return d.length >= 8 ? d : '';
+  }
+  function normalizarInstagram(s) {
+    var v = String(s || '').trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/[?#].*$/, '').replace(/\/+$/, '').replace(/^@/, '');
+    return v.indexOf(' ') >= 0 ? '' : v;
+  }
+  function chavesDedupe(p) {
+    var ks = [];
+    var t = String(p.telefone || '').replace(/\D/g, '');
+    if (t.length >= 8) ks.push('t:' + t.slice(-9));
+    if (p.instagram) ks.push('i:' + String(p.instagram).toLowerCase());
+    if (p.email) ks.push('e:' + String(p.email).toLowerCase());
+    if (!ks.length) ks.push('n:' + semAcento((p.nome || '') + '|' + (p.negocio || '')));
+    return ks;
+  }
+
+  root.BCCalc = {
+    ETAPAS: ETAPAS, ORDEM_FUNIL: ORDEM_FUNIL, CRITERIOS: CRITERIOS, GATILHOS: GATILHOS, MOTIVOS_SAIDA: MOTIVOS_SAIDA,
+    PROB_RENOVACAO_PADRAO: PROB_RENOVACAO_PADRAO, PROB_ETAPA_PADRAO: PROB_ETAPA_PADRAO,
+    toISO: toISO, parseISO: parseISO, hoje: hoje, setHoje: setHoje, addDias: addDias, addMeses: addMeses, diffDias: diffDias,
+    inicioSemana: inicioSemana, mesDe: mesDe, primeiroDiaMes: primeiroDiaMes, ultimoDiaMes: ultimoDiaMes, addMesesMes: addMesesMes,
+    diaUtil: diaUtil, dataLocalDe: dataLocalDe, soma: soma,
+    ltMeses: ltMeses, ltv: ltv, fimContrato: fimContrato, diasParaFim: diasParaFim, curvaABC: curvaABC,
+    notaRelacionamento: notaRelacionamento, faixaRelacionamento: faixaRelacionamento, exigeJustificativa: exigeJustificativa,
+    cpl: cpl, saude: saude, estatChurn: estatChurn,
+    mrrEm: mrrEm, historicoMrr: historicoMrr, previsaoMrr: previsaoMrr, pipelinePonderado: pipelinePonderado, concentracao: concentracao,
+    etapaMax: etapaMax, funil: funil, sequencia: sequencia,
+    parseCSV: parseCSV, adivinharMapeamento: adivinharMapeamento, normalizarTelefone: normalizarTelefone,
+    normalizarInstagram: normalizarInstagram, chavesDedupe: chavesDedupe, semAcento: semAcento
+  };
+  if (typeof module !== 'undefined' && module.exports) module.exports = root.BCCalc;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* Agência BC · camada de dados.
+   O resto do app só fala com BCStore. Por baixo há um adaptador:
+   local (localStorage) agora, Supabase depois (js/store-supabase.js). Mesmos nomes de colunas nos dois. */
+(function (root) {
+  'use strict';
+  var TABELAS = ['clientes', 'checkins', 'feedbacks', 'listas', 'prospects', 'atividades', 'configuracoes'];
+  var PREFIXO = 'bc:v1:';
+
+  function uid() {
+    try { return crypto.randomUUID(); } catch (e) { return 'id-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10); }
+  }
+
+  // ───────────── adaptador local ─────────────
+  var Local = {
+    nome: 'local', persistente: true, d: {},
+    init: function () {
+      var self = this;
+      TABELAS.forEach(function (t) {
+        try { var raw = localStorage.getItem(PREFIXO + t); self.d[t] = raw ? JSON.parse(raw) : []; }
+        catch (e) { self.d[t] = []; self.persistente = false; }
+      });
+      return Promise.resolve();
+    },
+    grava: function (t) {
+      try { localStorage.setItem(PREFIXO + t, JSON.stringify(this.d[t])); }
+      catch (e) { this.persistente = false; }
+    },
+    load: function (t) { return Promise.resolve(this.d[t].slice()); },
+    insert: function (t, row) {
+      row.id = row.id || uid();
+      row.created_at = row.created_at || new Date().toISOString();
+      this.d[t].push(row); this.grava(t);
+      return Promise.resolve(row);
+    },
+    insertMany: function (t, rows) {
+      var self = this, now = new Date().toISOString();
+      rows.forEach(function (r) { r.id = r.id || uid(); r.created_at = r.created_at || now; self.d[t].push(r); });
+      this.grava(t);
+      return Promise.resolve(rows);
+    },
+    update: function (t, id, patch) {
+      var i = this.d[t].findIndex(function (r) { return r.id === id; });
+      if (i < 0) return Promise.reject(new Error('Registro não encontrado'));
+      this.d[t][i] = Object.assign({}, this.d[t][i], patch);
+      this.grava(t);
+      return Promise.resolve(this.d[t][i]);
+    },
+    remove: function (t, id) {
+      this.d[t] = this.d[t].filter(function (r) { return r.id !== id; });
+      this.grava(t);
+      return Promise.resolve();
+    }
+  };
+
+  // ───────────── store ─────────────
+  var adapter = null, cache = {}, ouvintes = [], agendado = false;
+  TABELAS.forEach(function (t) { cache[t] = []; });
+
+  function emite() {
+    if (agendado) return;
+    agendado = true;
+    setTimeout(function () { agendado = false; ouvintes.forEach(function (f) { try { f(); } catch (e) { console.error(e); } }); }, 0);
+  }
+  function ehExemplo(r) { return typeof r.id === 'string' && r.id.indexOf('demo-') === 0; }
+
+  var Store = {
+    TABELAS: TABELAS,
+    async init() {
+      var modo = (root.BC_CONFIG && root.BC_CONFIG.MODE) || 'local';
+      adapter = (modo === 'supabase' && root.BCSupabase) ? root.BCSupabase : Local;
+      await adapter.init();
+      for (var i = 0; i < TABELAS.length; i++) cache[TABELAS[i]] = await adapter.load(TABELAS[i]);
+    },
+    modo: function () { return adapter ? adapter.nome : 'local'; },
+    persistente: function () { return adapter ? adapter.persistente !== false : true; },
+    all: function (t) { return cache[t]; },
+    get: function (t, id) { return cache[t].find(function (r) { return r.id === id; }); },
+    async insert(t, row) { var r = await adapter.insert(t, Object.assign({}, row)); cache[t].push(r); emite(); return r; },
+    async insertMany(t, rows) {
+      if (!rows.length) return [];
+      var rs = await adapter.insertMany(t, rows.map(function (r) { return Object.assign({}, r); }));
+      rs.forEach(function (r) { cache[t].push(r); });
+      emite(); return rs;
+    },
+    async update(t, id, patch) {
+      var r = await adapter.update(t, id, patch);
+      var i = cache[t].findIndex(function (x) { return x.id === id; });
+      if (i >= 0) cache[t][i] = r;
+      emite(); return r;
+    },
+    async remove(t, id) {
+      await adapter.remove(t, id);
+      cache[t] = cache[t].filter(function (r) { return r.id !== id; });
+      emite();
+    },
+    // configurações: pares chave/valor guardados na tabela configuracoes
+    cfg: function (chave, padrao) {
+      var r = cache.configuracoes.find(function (x) { return x.chave === chave; });
+      return r && r.valor != null ? r.valor : padrao;
+    },
+    async setCfg(chave, valor) {
+      var r = cache.configuracoes.find(function (x) { return x.chave === chave; });
+      if (r) return Store.update('configuracoes', r.id, { valor: valor });
+      return Store.insert('configuracoes', { chave: chave, valor: valor });
+    },
+    onChange: function (fn) { ouvintes.push(fn); },
+
+    // dados de exemplo: ids começam com "demo-"
+    temExemplos: function () { return TABELAS.some(function (t) { return cache[t].some(ehExemplo); }); },
+    temDados: function () { return ['clientes', 'prospects', 'checkins', 'feedbacks', 'listas'].some(function (t) { return cache[t].length > 0; }); },
+    async limparExemplos() {
+      for (var i = 0; i < TABELAS.length; i++) {
+        var t = TABELAS[i], lixo = cache[t].filter(ehExemplo);
+        for (var j = 0; j < lixo.length; j++) await adapter.remove(t, lixo[j].id);
+        cache[t] = cache[t].filter(function (r) { return !ehExemplo(r); });
+      }
+      emite();
+    },
+    async carregarExemplos(dados) {
+      var ordem = ['clientes', 'checkins', 'feedbacks', 'listas', 'prospects', 'atividades'];
+      for (var i = 0; i < ordem.length; i++) await Store.insertMany(ordem[i], dados[ordem[i]] || []);
+    },
+
+    exportar: function () {
+      var tabelas = {};
+      TABELAS.forEach(function (t) { tabelas[t] = cache[t].filter(function (r) { return !ehExemplo(r); }); });
+      return { app: 'agencia-bc', versao: 1, exportado_em: new Date().toISOString(), tabelas: tabelas };
+    },
+    async importar(obj, substituir) {
+      if (!obj || obj.app !== 'agencia-bc' || !obj.tabelas) throw new Error('Arquivo não é um backup da Agência BC.');
+      var i, j;
+      if (substituir) {
+        for (i = TABELAS.length - 1; i >= 0; i--) {
+          var atuais = cache[TABELAS[i]].slice();
+          for (j = 0; j < atuais.length; j++) await adapter.remove(TABELAS[i], atuais[j].id);
+          cache[TABELAS[i]] = [];
+        }
+      }
+      var ordem = ['clientes', 'listas', 'prospects', 'checkins', 'feedbacks', 'atividades', 'configuracoes'];
+      for (i = 0; i < ordem.length; i++) {
+        var existentes = {};
+        cache[ordem[i]].forEach(function (r) { existentes[r.id] = true; });
+        var novos = (obj.tabelas[ordem[i]] || []).filter(function (r) { return !existentes[r.id]; });
+        await Store.insertMany(ordem[i], novos);
+      }
+    }
+  };
+  root.BCStore = Store;
+  root.BCLocalAdapter = Local;
+})(window);
+
+</script>
+<script>
+/* Agência BC · adaptador Supabase (etapa 2: será validado quando o projeto for criado).
+   Carregado só quando BC_CONFIG.MODE === 'supabase'. Usa a chave publicável + login do usuário;
+   a segurança vem do RLS (ver supabase/schema.sql). */
+(function (root) {
+  'use strict';
+  var sb = null;
+  var LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js';
+
+  function carregaLib() {
+    if (root.supabase && root.supabase.createClient) return Promise.resolve();
+    return new Promise(function (ok, erro) {
+      var s = document.createElement('script');
+      s.src = LIB; s.onload = ok; s.onerror = function () { erro(new Error('Não foi possível carregar o Supabase.')); };
+      document.head.appendChild(s);
+    });
+  }
+  function tira(row) { var r = Object.assign({}, row); delete r.user_id; if (r.id && /^(demo-|id-)/.test(r.id)) delete r.id; return r; }
+
+  var A = {
+    nome: 'supabase', persistente: true, sessao: null,
+    async init() {
+      var C = root.BC_CONFIG;
+      if (!C.SUPABASE_URL || !C.SUPABASE_KEY) throw new Error('Preencha SUPABASE_URL e SUPABASE_KEY em js/config.js.');
+      await carregaLib();
+      sb = root.supabase.createClient(C.SUPABASE_URL, C.SUPABASE_KEY);
+      var r = await sb.auth.getSession();
+      A.sessao = r.data.session;
+      if (!A.sessao) throw Object.assign(new Error('Faça login para continuar.'), { precisaLogin: true });
+    },
+    async entrar(email, senha) {
+      var r = await sb.auth.signInWithPassword({ email: email, password: senha });
+      if (r.error) throw r.error;
+      A.sessao = r.data.session;
+    },
+    async sair() { await sb.auth.signOut(); A.sessao = null; },
+    async load(t) {
+      var out = [], de = 0, passo = 1000;
+      for (;;) {
+        var r = await sb.from(t).select('*').order('created_at', { ascending: true }).range(de, de + passo - 1);
+        if (r.error) throw r.error;
+        out = out.concat(r.data);
+        if (r.data.length < passo) break;
+        de += passo;
+      }
+      return out;
+    },
+    async insert(t, row) {
+      var r = await sb.from(t).insert(tira(row)).select().single();
+      if (r.error) throw r.error;
+      return r.data;
+    },
+    async insertMany(t, rows) {
+      var out = [];
+      for (var i = 0; i < rows.length; i += 500) {
+        var r = await sb.from(t).insert(rows.slice(i, i + 500).map(tira)).select();
+        if (r.error) throw r.error;
+        out = out.concat(r.data);
+      }
+      return out;
+    },
+    async update(t, id, patch) {
+      var p = tira(patch); delete p.id; delete p.created_at;
+      var r = await sb.from(t).update(p).eq('id', id).select().single();
+      if (r.error) throw r.error;
+      return r.data;
+    },
+    async remove(t, id) {
+      var r = await sb.from(t).delete().eq('id', id);
+      if (r.error) throw r.error;
+    }
+  };
+  root.BCSupabase = A;
+})(window);
+
+</script>
+<script>
+/* Agência BC · dados de exemplo (todos fictícios, ids "demo-...", datas relativas a hoje).
+   Servem só para ver a ferramenta funcionando. "Limpar exemplos" remove tudo. */
+(function (root) {
+  'use strict';
+  var C = root.BCCalc;
+
+  function gerar(h) {
+    var seg = C.inicioSemana(h);
+    function sem(n) { return C.addDias(seg, -7 * n); }
+    function dia(n) { return C.addDias(h, -n); }
+    function ts(iso, hora) { var p = iso.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2], hora || 10, 0, 0).toISOString(); }
+
+    var clientes = [
+      { id: 'demo-c1', nome: 'Clínica Aurora Estética (exemplo)', segmento: 'Estética', contato_nome: 'Marina', whatsapp: '5511900000011', instagram: '',
+        mensalidade: 1500, inicio: dia(210), duracao_meses: 12, verba_mensal: 1500, meta_leads_semana: 25, meta_cpl: 14, status: 'ativo', notas: 'Atende bem os leads; responde no mesmo dia.' },
+      { id: 'demo-c2', nome: 'Studio Vértice Pilates (exemplo)', segmento: 'Pilates', contato_nome: 'Rafael', whatsapp: '5511900000012', instagram: '',
+        mensalidade: 1200, inicio: dia(100), duracao_meses: 6, verba_mensal: 1000, meta_leads_semana: 15, meta_cpl: 18, status: 'ativo', notas: '' },
+      { id: 'demo-c3', nome: 'Casa Prado Imóveis (exemplo)', segmento: 'Imobiliária', contato_nome: 'Débora', whatsapp: '5511900000013', instagram: '',
+        mensalidade: 2000, inicio: dia(72), duracao_meses: 3, verba_mensal: 1000, meta_leads_semana: 15, meta_cpl: 20, status: 'ativo', notas: 'Corretores demoram a ligar de volta.' },
+      { id: 'demo-c4', nome: 'Doce Ateliê Confeitaria (exemplo)', segmento: 'Confeitaria', contato_nome: 'Paula', whatsapp: '5511900000014', instagram: '',
+        mensalidade: 900, inicio: dia(25), duracao_meses: 3, verba_mensal: 600, meta_leads_semana: 10, meta_cpl: 15, status: 'ativo', prospect_id: 'demo-p11', notas: '' },
+      { id: 'demo-c5', nome: 'Oficina Rota Sul (exemplo)', segmento: 'Automotivo', contato_nome: 'Sérgio', whatsapp: '5511900000015', instagram: '',
+        mensalidade: 1100, inicio: dia(300), duracao_meses: 6, verba_mensal: 800, meta_leads_semana: 12, meta_cpl: 20, status: 'churn', churn_data: dia(40), churn_motivo: 'alinhamento',
+        churn_aprendizados: 'Eu mostrava só leads, não as vendas que ele percebia. Faltou um relatório mensal ligando o anúncio ao faturamento.' },
+      { id: 'demo-c6', nome: 'Pet Bem Estar (exemplo)', segmento: 'Pet shop', contato_nome: 'Lúcia', whatsapp: '5511900000016', instagram: '',
+        mensalidade: 800, inicio: dia(420), duracao_meses: 6, verba_mensal: 500, meta_leads_semana: 10, meta_cpl: 12, status: 'churn', churn_data: dia(150), churn_motivo: 'estrutura',
+        churn_aprendizados: 'Ninguém atendia o WhatsApp. Eu devia ter exigido atendimento antes de aumentar a verba.' }
+    ];
+
+    // check-ins: n = semanas atrás (0 = semana atual). Relacionamento = [confiança, aderência, postura, presença, insumos]
+    var checkins = [];
+    function ck(cid, n, inv, leads, vendas, rel, gat, feito, proximo, just) {
+      var o = { id: 'demo-k-' + cid + '-' + n, cliente_id: cid, semana: sem(n), investimento: inv, leads: leads, vendas: vendas, faturamento: null,
+        feito: feito || '', proximo: proximo || '', gatilhos: gat || [], justificativa: just || '' };
+      var nomes = ['r_confianca', 'r_aderencia', 'r_postura', 'r_presenca', 'r_insumos'];
+      o.nota_rel = null;
+      nomes.forEach(function (k) { o[k] = null; });
+      if (rel) {
+        nomes.forEach(function (k, i) { o[k] = rel[i]; });
+        o.nota_rel = C.notaRelacionamento({ confianca: rel[0], aderencia: rel[1], postura: rel[2], presenca: rel[3], insumos: rel[4] });
+      }
+      checkins.push(o);
+    }
+    var l1 = [21, 24, 23, 27, 25, 22, 26, 24], i1 = [280, 300, 320, 300, 290, 300, 310, 300], v1 = [4, 5, 5, 7, 6, 4, 5, 6];
+    for (var n = 7; n >= 0; n--) {
+      var k = 7 - n;
+      ck('demo-c1', n, i1[k], l1[k], v1[k], [5, 4, 5, 4, 5], [],
+        n === 0 ? 'Troquei o criativo principal e pausei o público frio de menor retorno.' : 'Ajuste de orçamento entre conjuntos.',
+        n === 0 ? 'Testar vídeo curto com depoimento.' : '');
+    }
+    var l2 = [12, 14, 15, 13, 15, 16, 14], i2 = [220, 230, 240, 240, 250, 250, 240];
+    for (n = 7; n >= 1; n--) {
+      k = 7 - n;
+      ck('demo-c2', n, i2[k], l2[k], 2 + (k % 3), [4, 4, 4, 3, 4], [], 'Revisão de público e nova arte de carrossel.', 'Aguardar fotos novas do estúdio.');
+    }
+    var l3 = [14, 15, 13, 12, 11, 9, 5], i3 = [220, 220, 220, 200, 200, 180, 160];
+    var r3 = [[4, 4, 4, 4, 4], [4, 4, 4, 4, 4], [4, 3, 4, 3, 3], [4, 3, 4, 3, 3], [3, 3, 3, 3, 2], [3, 3, 3, 3, 2], [3, 2, 3, 2, 2]];
+    for (n = 6; n >= 0; n--) {
+      k = 6 - n;
+      var g3 = n === 0 ? ['reduziu_verba', 'nao_implementa'] : (n === 1 ? ['cobranca'] : []);
+      var just = 'Reduziu a verba sem avisar e não ajustou o atendimento dos leads, como combinado. A relação esfriou.';
+      var nota = C.notaRelacionamento({ confianca: r3[k][0], aderencia: r3[k][1], postura: r3[k][2], presenca: r3[k][3], insumos: r3[k][4] });
+      ck('demo-c3', n, i3[k], l3[k], n > 3 ? 2 : 0, r3[k], g3,
+        n === 0 ? 'Refiz o formulário e reforcei o pedido de resposta rápida aos leads.' : 'Ajustes de segmentação.',
+        n === 0 ? 'Marcar conversa sobre a renovação e o atendimento.' : '', nota < 7 ? just : '');
+    }
+    ck('demo-c4', 2, 120, 8, 1, null, [], 'Subi a primeira campanha de encomendas.', 'Aguardar aprovação das fotos.');
+    ck('demo-c4', 1, 150, 11, 2, [4, 4, 5, 4, 4], [], 'Ativei remarketing para quem visitou o perfil.', 'Testar oferta de kits para datas comemorativas.');
+
+    var feedbacks = [
+      { id: 'demo-f1', cliente_id: 'demo-c1', data: dia(3), canal: 'whatsapp', tom: 'positivo', texto: 'Elogiou o fluxo de agendamentos e pediu para aumentar a verba no próximo mês.' },
+      { id: 'demo-f2', cliente_id: 'demo-c1', data: dia(20), canal: 'reuniao', tom: 'neutro', texto: 'Quer entender melhor como os leads são classificados.' },
+      { id: 'demo-f3', cliente_id: 'demo-c2', data: dia(9), canal: 'whatsapp', tom: 'neutro', texto: 'Pediu para trocar a arte do carrossel por fotos reais das alunas.' },
+      { id: 'demo-f4', cliente_id: 'demo-c2', data: dia(30), canal: 'reuniao', tom: 'positivo', texto: 'Satisfeito com a quantidade de aulas experimentais agendadas.' },
+      { id: 'demo-f5', cliente_id: 'demo-c3', data: dia(6), canal: 'ligacao', tom: 'negativo', texto: 'Reclamou que os leads não atendem o telefone e que o investimento não está compensando.' },
+      { id: 'demo-f6', cliente_id: 'demo-c3', data: dia(22), canal: 'whatsapp', tom: 'neutro', texto: 'Perguntou quando os primeiros fechamentos devem aparecer.' },
+      { id: 'demo-f7', cliente_id: 'demo-c4', data: dia(4), canal: 'whatsapp', tom: 'positivo', texto: 'Recebeu várias encomendas pelo WhatsApp e mandou print das conversas.' }
+    ];
+
+    var listas = [{ id: 'demo-l1', nome: 'Clínicas de estética (exemplo)', nicho: 'Estética', cidade: 'Cidade Exemplo' }];
+    function pr(i, nome, cidadeNicho, over) {
+      var base = { id: 'demo-p' + i, lista_id: 'demo-l1', nome: nome, negocio: nome, nicho: 'Estética', cidade: 'Cidade Exemplo',
+        telefone: '55119000000' + (10 + i), email: '', instagram: '', origem: 'lista', campanha: '', meta_lead_id: '', canal: 'whatsapp',
+        etapa: 'novo', etapa_max: 'novo', toques: 0, proxima_data: null, proxima_acao: '', abordagem: '', diagnostico: '', notas: '', motivo_perda: '', cliente_id: null,
+        atualizado_em: ts(h, 9) };
+      return Object.assign(base, over || {});
+    }
+    var prospects = [
+      pr(1, 'Clínica Bela Forma', '', { origem: 'meta_ads', campanha: 'Teste · formulário instantâneo', nicho: 'Estética', lista_id: null, etapa: 'novo', canal: 'whatsapp', notas: 'Lead chegou pelo formulário do anúncio.' }),
+      pr(2, 'Estética Lumi', '', { origem: 'meta_ads', campanha: 'Teste · formulário instantâneo', lista_id: null, etapa: 'novo' }),
+      pr(3, 'Espaço Renove', '', { etapa: 'novo', instagram: 'espacorenove' }),
+      pr(4, 'Studio Pele & Cia', '', { etapa: 'novo', instagram: 'studiopeleecia' }),
+      pr(5, 'Clínica Vivaz', '', { etapa: 'abordado', etapa_max: 'abordado', toques: 1, proxima_data: h, proxima_acao: 'Follow-up 1' }),
+      pr(6, 'Dermo Centro', '', { etapa: 'abordado', etapa_max: 'abordado', toques: 2, proxima_data: dia(1), proxima_acao: 'Follow-up 2' }),
+      pr(7, 'Instituto Alba', '', { etapa: 'abordado', etapa_max: 'abordado', toques: 1, proxima_data: C.addDias(h, 2), proxima_acao: 'Follow-up 1' }),
+      pr(8, 'Spa Urbano', '', { etapa: 'respondeu', etapa_max: 'respondeu', toques: 2, proxima_data: h, proxima_acao: 'Enviar o mini-diagnóstico',
+        diagnostico: 'Resumo: perfil com boa avaliação, mas sem anúncio ativo e sem botão de WhatsApp no destaque.' }),
+      pr(9, 'Clínica Prime Skin', '', { etapa: 'reuniao', etapa_max: 'reuniao', toques: 3, proxima_data: C.addDias(h, 1), proxima_acao: 'Reunião às 15h', diagnostico: 'Mini-diagnóstico enviado e aprovado.' }),
+      pr(10, 'Estética Aurea', '', { etapa: 'proposta', etapa_max: 'proposta', toques: 4, proxima_data: C.addDias(h, 3), proxima_acao: 'Cobrar retorno da proposta' }),
+      pr(11, 'Doce Ateliê Confeitaria', '', { etapa: 'fechado', etapa_max: 'fechado', toques: 3, cliente_id: 'demo-c4', nicho: 'Confeitaria', origem: 'indicacao', lista_id: null }),
+      pr(12, 'Studio Contorno', '', { etapa: 'perdido', etapa_max: 'reuniao', toques: 4, motivo_perda: 'Sem verba para anúncios agora' })
+    ];
+
+    // toques: 3 hoje; dias úteis anteriores com contagens [6,5,7,4,6,5] (a quebra de 4 limita a sequência)
+    var atividades = [], seq = 0;
+    var alvo = [5, 6, 7, 8, 9, 10];
+    function toque(iso, hora) {
+      var p = alvo[seq % alvo.length]; seq++;
+      atividades.push({ id: 'demo-a' + seq, prospect_id: 'demo-p' + p, tipo: 'toque', canal: 'whatsapp', texto: 'Mensagem enviada', created_at: ts(iso, hora) });
+    }
+    for (var t = 0; t < 3; t++) toque(h, 9 + t);
+    var contagens = [6, 5, 7, 4, 6, 5], d = 1, ci = 0;
+    while (ci < contagens.length) {
+      var iso = dia(d);
+      if (C.diaUtil(iso)) { for (var q = 0; q < contagens[ci]; q++) toque(iso, 9 + (q % 8)); ci++; }
+      d++;
+    }
+    return { clientes: clientes, checkins: checkins, feedbacks: feedbacks, listas: listas, prospects: prospects, atividades: atividades };
+  }
+
+  root.BCSeed = { gerar: gerar };
+})(window);
+
+</script>
+<script>
+/* Agência BC · utilitários de interface: formatação, diálogos, aviso, gráficos em SVG. */
+(function (root) {
+  'use strict';
+  var C = root.BCCalc;
+  var BC = root.BC = root.BC || {};
+  BC.act = {};      // ações disparadas por data-act="..."
+  BC.forms = {};    // formulários com data-form="..."
+  BC.views = {};    // telas
+  BC.ui = { filtroRisco: false, abaPros: 'hoje', pVista: 'quadro', novoAberto: false, pEtapa: '', pOrigem: '', pLista: '', pBusca: '' };
+
+  // ───────────── formatação ─────────────
+  BC.esc = function (s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
+  };
+  var nf0 = null, nf2 = null;
+  try {
+    nf0 = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+    nf2 = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  } catch (e) { /* segue com o fallback abaixo */ }
+  function milhar(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+  BC.brl = function (n) {
+    if (n == null || n === '' || isNaN(n)) return '—';
+    return nf0 ? nf0.format(Number(n)).replace(/ /g, ' ') : 'R$ ' + milhar(n);
+  };
+  BC.brl2 = function (n) {
+    if (n == null || n === '' || isNaN(n)) return '—';
+    return nf2 ? nf2.format(Number(n)).replace(/ /g, ' ') : 'R$ ' + Number(n).toFixed(2).replace('.', ',');
+  };
+  BC.n1 = function (n) { return (n == null || isNaN(n)) ? '—' : (Math.round(n * 10) / 10).toFixed(1).replace('.', ','); };
+  BC.pct = function (x, casas) { return (x == null || isNaN(x)) ? '—' : (x * 100).toFixed(casas || 0).replace('.', ',') + '%'; };
+  BC.data = function (iso) { return iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : '—'; };
+  BC.dataCurta = function (iso) { return iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) : '—'; };
+  var MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  BC.mes = function (m) { return MESES[Number(m.slice(5, 7)) - 1] + '/' + m.slice(2, 4); };
+  var DIAS = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+  var MESES_L = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  BC.dataLonga = function (iso) { var d = C.parseISO(iso); return DIAS[d.getDay()] + ', ' + d.getDate() + ' de ' + MESES_L[d.getMonth()]; };
+  BC.rotuloDias = function (dias) {
+    if (dias === 0) return 'hoje';
+    if (dias === 1) return 'amanhã';
+    if (dias === -1) return 'ontem';
+    return dias > 0 ? 'em ' + dias + ' dias' : 'há ' + (-dias) + ' dias';
+  };
+  BC.nomeEtapa = function (id) { var e = C.ETAPAS.filter(function (x) { return x.id === id; })[0]; return e ? e.nome : id; };
+  BC.nomeMotivo = function (id) { var m = C.MOTIVOS_SAIDA.filter(function (x) { return x.id === id; })[0]; return m ? m.nome : (id === 'sem_motivo' ? 'Sem motivo' : id); };
+  BC.num = function (v) { return (v === '' || v == null) ? null : Number(v); };
+  BC.txt = function (v) { return String(v == null ? '' : v).trim(); };
+  BC.waLink = function (tel) { var d = C.normalizarTelefone(tel); return d ? 'https://wa.me/' + d : ''; };
+  BC.igLink = function (u) { return u ? 'https://instagram.com/' + encodeURIComponent(u) : ''; };
+
+  // ───────────── pedaços de HTML reutilizáveis ─────────────
+  var FAROL_NOME = { verde: 'Verde', amarelo: 'Amarelo', vermelho: 'Vermelho' };
+  BC.pillFarol = function (f, score) { return '<span class="pill ' + f + '" title="Health score ' + score + '/100">' + FAROL_NOME[f] + (score != null ? ' <span class="mono">' + score + '</span>' : '') + '</span>'; };
+  var FAIXA_NOME = { otimo: 'Ótimo', regular: 'Regular', ruim: 'Ruim' };
+  BC.pillRel = function (nota) {
+    if (nota == null) return '<span class="faint">—</span>';
+    return '<span class="pill ' + C.faixaRelacionamento(nota) + '">' + BC.n1(nota) + ' · ' + FAIXA_NOME[C.faixaRelacionamento(nota)] + '</span>';
+  };
+
+  // ───────────── aviso e diálogos ─────────────
+  var toastTimer = null;
+  BC.toast = function (msg, erro) {
+    var el = document.getElementById('toast');
+    if (!el) return;
+    el.textContent = msg; el.className = 'toast' + (erro ? ' erro' : ''); el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.hidden = true; }, erro ? 6000 : 3000);
+  };
+  BC.dialogo = function (html, opts) {
+    var d = document.createElement('dialog');
+    if (opts && opts.estreito) d.className = 'estreito';
+    if (opts && opts.gaveta) { d.className = 'gaveta'; d.addEventListener('click', function (e) { if (e.target === d) d.close(); }); }
+    d.innerHTML = html;
+    document.getElementById('dialogos').appendChild(d);
+    d.addEventListener('close', function () { d.remove(); });
+    d.showModal();
+    var primeiro = d.querySelector('[autofocus], input:not([type=hidden]):not([type=radio]):not([type=checkbox]), select, textarea');
+    if (primeiro && !(opts && opts.semFoco)) { try { primeiro.focus({ preventScroll: true }); } catch (e) { /* ok */ } }
+    return d;
+  };
+  BC.fechar = function (el) { var d = el.closest('dialog'); if (d) d.close(); };
+  BC.cabDialogo = function (titulo, sub) {
+    return '<div class="dlg-cab"><div><h3>' + BC.esc(titulo) + '</h3>' + (sub ? '<p>' + BC.esc(sub) + '</p>' : '') + '</div>' +
+      '<button type="button" class="btn fantasma mini" data-act="fechar" aria-label="Fechar">Fechar</button></div>';
+  };
+  BC.dados = function (form) {
+    var o = {};
+    new FormData(form).forEach(function (v, k) { if (o[k] === undefined) o[k] = v; else if (Array.isArray(o[k])) o[k].push(v); else o[k] = [o[k], v]; });
+    return o;
+  };
+  BC.erroForm = function (form, msg) {
+    var el = form.querySelector('.erro-form');
+    if (el) { el.textContent = msg; el.hidden = !msg; }
+  };
+  // roda uma operação assíncrona mostrando erro em vez de quebrar
+  BC.seguro = async function (fn, form) {
+    try { return await fn(); }
+    catch (e) {
+      console.error(e);
+      var msg = (e && e.message) ? e.message : 'Algo deu errado.';
+      if (form) BC.erroForm(form, msg); else BC.toast(msg, true);
+    }
+  };
+
+  // ───────────── dica (tooltip) dos gráficos ─────────────
+  var dica = null;
+  function mostraDica(alvo, x, y) {
+    if (!dica) { dica = document.createElement('div'); dica.className = 'dica'; dica.setAttribute('role', 'tooltip'); document.body.appendChild(dica); }
+    dica.textContent = alvo.getAttribute('data-dica'); dica.hidden = false;
+    var w = dica.offsetWidth, px = Math.min(Math.max(8, x + 12), window.innerWidth - w - 8);
+    dica.style.left = px + 'px'; dica.style.top = Math.max(8, y - 38) + 'px';
+  }
+  document.addEventListener('mousemove', function (e) {
+    var alvo = e.target.closest && e.target.closest('[data-dica]');
+    if (alvo) mostraDica(alvo, e.clientX, e.clientY); else if (dica) dica.hidden = true;
+  });
+  document.addEventListener('click', function (e) {
+    var alvo = e.target.closest && e.target.closest('[data-dica]');
+    if (alvo) mostraDica(alvo, e.clientX, e.clientY); else if (dica) dica.hidden = true;
+  });
+
+  // ───────────── gráficos (SVG sem biblioteca) ─────────────
+  function maxBonito(v) {
+    if (v <= 0) return 10;
+    var exp = Math.pow(10, Math.floor(Math.log10(v))), f = v / exp;
+    var n = f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10;
+    return n * exp;
+  }
+  function barraArredondada(x, y, w, h, r) {   // cantos arredondados só no topo
+    r = Math.min(r, w / 2, h);
+    if (h <= 0) return '';
+    return 'M' + x + ',' + (y + h) + 'V' + (y + r) + 'Q' + x + ',' + y + ' ' + (x + r) + ',' + y + 'H' + (x + w - r) + 'Q' + (x + w) + ',' + y + ' ' + (x + w) + ',' + (y + r) + 'V' + (y + h) + 'Z';
+  }
+  BC.graf = {
+    // barras simples (ex.: leads por semana), com linha de meta opcional
+    barras: function (valores, rotulos, opts) {
+      opts = opts || {};
+      var W = 340, H = 130, pe = 28, pd = 6, pt = 12, pb = 20, n = valores.length;
+      if (!n) return '<p class="vazio">Sem dados ainda.</p>';
+      var topo = maxBonito(Math.max.apply(null, valores.concat([opts.meta || 0])));
+      var pw = W - pe - pd, ph = H - pt - pb, passo = pw / n, bw = Math.min(26, passo * 0.62);
+      var s = '<svg class="graf" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + BC.esc(opts.titulo || 'Gráfico de barras') + '">';
+      [0, topo / 2, topo].forEach(function (t) {
+        var y = pt + ph - (t / topo) * ph;
+        s += '<line class="grade" x1="' + pe + '" x2="' + (W - pd) + '" y1="' + y + '" y2="' + y + '"/><text x="' + (pe - 5) + '" y="' + (y + 3.5) + '" text-anchor="end">' + Math.round(t) + '</text>';
+      });
+      valores.forEach(function (v, i) {
+        var h = (v / topo) * ph, x = pe + passo * i + (passo - bw) / 2, y = pt + ph - h;
+        var ultimo = i === n - 1;
+        s += '<path d="' + barraArredondada(x, y, bw, h, 3) + '" fill="var(--accent)" opacity="' + (ultimo ? 1 : 0.55) + '"/>';
+        s += '<rect x="' + (pe + passo * i) + '" y="' + pt + '" width="' + passo + '" height="' + (ph + pb - 4) + '" fill="transparent" data-dica="' + BC.esc(rotulos[i] + ': ' + v + (opts.unid || '')) + '"/>';
+        if (ultimo) s += '<text x="' + (x + bw / 2) + '" y="' + (y - 4) + '" text-anchor="middle" style="fill:var(--ink);font-weight:600">' + v + '</text>';
+        if (i === 0 || ultimo || n <= 6) s += '<text x="' + (x + bw / 2) + '" y="' + (H - 5) + '" text-anchor="middle">' + BC.esc(rotulos[i]) + '</text>';
+      });
+      if (opts.meta) {
+        var ym = pt + ph - (opts.meta / topo) * ph;
+        s += '<line x1="' + pe + '" x2="' + (W - pd) + '" y1="' + ym + '" y2="' + ym + '" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="4 3"/>';
+        s += '<text x="' + (W - pd) + '" y="' + (ym - 4) + '" text-anchor="end" style="fill:var(--ink)">meta ' + opts.meta + '</text>';
+      }
+      return s + '</svg>';
+    },
+    // linha de nota 0–10 com as faixas de 7 e 9
+    notas: function (valores, rotulos) {
+      var W = 340, H = 130, pe = 24, pd = 10, pt = 12, pb = 20, n = valores.length;
+      if (!n) return '<p class="vazio">Sem notas de relacionamento ainda.</p>';
+      var pw = W - pe - pd, ph = H - pt - pb;
+      function X(i) { return n === 1 ? pe + pw / 2 : pe + (pw * i) / (n - 1); }
+      function Y(v) { return pt + ph - (v / 10) * ph; }
+      var s = '<svg class="graf" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Nota de relacionamento por semana">';
+      [0, 5, 10].forEach(function (t) { s += '<line class="grade" x1="' + pe + '" x2="' + (W - pd) + '" y1="' + Y(t) + '" y2="' + Y(t) + '"/><text x="' + (pe - 5) + '" y="' + (Y(t) + 3.5) + '" text-anchor="end">' + t + '</text>'; });
+      [7, 9].forEach(function (t) { s += '<line x1="' + pe + '" x2="' + (W - pd) + '" y1="' + Y(t) + '" y2="' + Y(t) + '" stroke="var(--ink-3)" stroke-dasharray="3 3"/><text x="' + (W - pd) + '" y="' + (Y(t) - 3) + '" text-anchor="end">' + t + '</text>'; });
+      var pts = valores.map(function (v, i) { return X(i) + ',' + Y(v); }).join(' ');
+      s += '<polyline points="' + pts + '" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+      valores.forEach(function (v, i) {
+        var ult = i === n - 1;
+        s += '<circle cx="' + X(i) + '" cy="' + Y(v) + '" r="' + (ult ? 5 : 3.5) + '" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>';
+        s += '<circle cx="' + X(i) + '" cy="' + Y(v) + '" r="14" fill="transparent" data-dica="' + BC.esc(rotulos[i] + ': ' + BC.n1(v)) + '"/>';
+        if (ult) s += '<text x="' + X(i) + '" y="' + (Y(v) - 9) + '" text-anchor="end" style="fill:var(--ink);font-weight:600">' + BC.n1(v) + '</text>';
+        if (i === 0 || ult) s += '<text x="' + X(i) + '" y="' + (H - 5) + '" text-anchor="' + (i === 0 ? 'start' : 'end') + '">' + BC.esc(rotulos[i]) + '</text>';
+      });
+      return s + '</svg>';
+    },
+    // MRR: histórico (barras neutras), contratado (barras azuis) e esperado (linha com pontos)
+    mrr: function (hist, prev) {
+      var W = 640, H = 250, pe = 54, pd = 10, pt = 16, pb = 26;
+      var meses = hist.map(function (x) { return { mes: x.mes, tipo: 'hist', mrr: x.mrr }; })
+        .concat(prev.slice(1).map(function (x) { return { mes: x.mes, tipo: 'prev', contratado: x.contratado, esperado: x.esperado }; }));
+      var maxV = Math.max.apply(null, meses.map(function (m) { return Math.max(m.mrr || 0, m.contratado || 0, m.esperado || 0); }).concat([1]));
+      var topo = maxBonito(maxV * 1.05), pw = W - pe - pd, ph = H - pt - pb, n = meses.length, passo = pw / n, bw = Math.min(34, passo * 0.56);
+      function Y(v) { return pt + ph - (v / topo) * ph; }
+      var s = '<svg class="graf" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="MRR histórico e previsão para os próximos meses">';
+      [0, 0.25, 0.5, 0.75, 1].forEach(function (f) {
+        var v = topo * f;
+        s += '<line class="grade" x1="' + pe + '" x2="' + (W - pd) + '" y1="' + Y(v) + '" y2="' + Y(v) + '"/><text x="' + (pe - 6) + '" y="' + (Y(v) + 3.5) + '" text-anchor="end">' + (v >= 1000 ? (Math.round(v / 100) / 10).toString().replace('.', ',') + ' mil' : Math.round(v)) + '</text>';
+      });
+      var linha = [];
+      meses.forEach(function (m, i) {
+        var cx = pe + passo * i + passo / 2, x = cx - bw / 2;
+        var valor = m.tipo === 'hist' ? m.mrr : m.contratado;
+        var cor = m.tipo === 'hist' ? 'var(--ink-3)' : 'var(--accent)';
+        var tip = m.tipo === 'hist' ? BC.mes(m.mes) + ': ' + BC.brl(m.mrr) : BC.mes(m.mes) + ' · contratado ' + BC.brl(m.contratado) + ' · esperado ' + BC.brl(m.esperado);
+        s += '<path d="' + barraArredondada(x, Y(valor), bw, (valor / topo) * ph, 4) + '" fill="' + cor + '"/>';
+        if (m.tipo === 'prev') linha.push({ cx: cx, y: Y(m.esperado), m: m });
+        s += '<rect x="' + (cx - passo / 2) + '" y="' + pt + '" width="' + passo + '" height="' + (ph + pb - 6) + '" fill="transparent" data-dica="' + BC.esc(tip) + '"/>';
+        s += '<text x="' + cx + '" y="' + (H - 7) + '" text-anchor="middle">' + BC.mes(m.mes) + '</text>';
+      });
+      if (linha.length) {
+        s += '<polyline points="' + linha.map(function (p) { return p.cx + ',' + p.y; }).join(' ') + '" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>';
+        linha.forEach(function (p, i) {
+          s += '<circle cx="' + p.cx + '" cy="' + p.y + '" r="4.5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"/>';
+          if (i === linha.length - 1) s += '<text x="' + p.cx + '" y="' + (p.y - 9) + '" text-anchor="end" style="fill:var(--ink);font-weight:600">' + BC.brl(p.m.esperado) + '</text>';
+        });
+      }
+      return s + '</svg>' +
+        '<div class="legenda"><span><i style="background:var(--ink-3)"></i>Histórico (MRR do mês)</span><span><i style="background:var(--accent)"></i>Contratado (contratos vigentes)</span><span><i style="background:var(--ink);border-radius:50%"></i>Esperado (com renovações prováveis)</span></div>';
+    }
+  };
+})(window);
+
+</script>
+<script>
+/* Agência BC · diálogos da carteira: cliente, check-in semanal, feedback, churn. */
+(function (root) {
+  'use strict';
+  var C = root.BCCalc, S = root.BCStore, BC = root.BC, esc = BC.esc;
+
+  function porNome(a, b) { return String(a.nome).localeCompare(String(b.nome)); }
+  function campo(id, rotulo, input, extra) {
+    extra = extra || {};
+    return '<div class="campo' + (extra.largo ? ' largo' : '') + '"><label for="' + id + '">' + rotulo + '</label>' + input + (extra.dica ? '<small>' + extra.dica + '</small>' : '') + '</div>';
+  }
+  function inp(id, tipo, valor, attrs) {
+    return '<input id="' + id + '" name="' + id.replace(/^[a-z]+-/, '') + '" type="' + tipo + '" value="' + esc(valor == null ? '' : valor) + '" ' + (attrs || '') + '>';
+  }
+  function opcoes(lista, atual) {
+    return lista.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (String(o[0]) === String(atual) ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('');
+  }
+
+  // ───────────── cliente ─────────────
+  BC.abrirCliente = function (cliente, pre) {
+    var c = cliente || {}; pre = pre || {};
+    function v(k, d) { return c[k] != null ? c[k] : (pre[k] != null ? pre[k] : (d != null ? d : '')); }
+    var durs = [3, 6, 9, 12, 18, 24]; var dAtual = Number(v('duracao_meses', 6));
+    if (durs.indexOf(dAtual) < 0) durs.push(dAtual);
+    durs.sort(function (a, b) { return a - b; });
+    var html = '<form class="dlg" data-form="cliente" data-id="' + esc(c.id || '') + '" data-prospect="' + esc(pre.prospect_id || '') + '">' +
+      BC.cabDialogo(c.id ? 'Editar cliente' : 'Novo cliente', c.id ? '' : 'Só o essencial para a conta. O resto você completa depois.') +
+      '<div class="grade">' +
+      campo('cli-nome', 'Nome do cliente', inp('cli-nome', 'text', v('nome'), 'required autocomplete="off"'), { largo: true }) +
+      campo('cli-segmento', 'Segmento', inp('cli-segmento', 'text', v('segmento'), 'placeholder="Ex.: estética, imobiliária"')) +
+      campo('cli-contato_nome', 'Quem decide no cliente', inp('cli-contato_nome', 'text', v('contato_nome'))) +
+      campo('cli-whatsapp', 'WhatsApp', inp('cli-whatsapp', 'text', v('whatsapp'), 'inputmode="tel"')) +
+      campo('cli-instagram', 'Instagram (sem @)', inp('cli-instagram', 'text', v('instagram'))) +
+      campo('cli-mensalidade', 'Mensalidade (R$)', inp('cli-mensalidade', 'number', v('mensalidade'), 'required min="0" step="any" inputmode="decimal"'), { dica: 'Valor da sua gestão, sem a verba dos anúncios.' }) +
+      campo('cli-inicio', 'Início do contrato', inp('cli-inicio', 'date', v('inicio', C.hoje()), 'required')) +
+      campo('cli-duracao_meses', 'Duração (meses)', '<select id="cli-duracao_meses" name="duracao_meses">' + opcoes(durs.map(function (d) { return [d, d + ' meses']; }), dAtual) + '</select>') +
+      campo('cli-verba_mensal', 'Verba mensal de anúncios (R$)', inp('cli-verba_mensal', 'number', v('verba_mensal'), 'min="0" step="any" inputmode="decimal"'), { dica: 'Paga pelo cliente direto à plataforma.' }) +
+      campo('cli-meta_leads_semana', 'Meta de leads por semana', inp('cli-meta_leads_semana', 'number', v('meta_leads_semana'), 'min="0" step="1" inputmode="numeric"'), { dica: 'Usada no health score.' }) +
+      campo('cli-meta_cpl', 'CPL máximo aceitável (R$)', inp('cli-meta_cpl', 'number', v('meta_cpl'), 'min="0" step="any" inputmode="decimal"')) +
+      campo('cli-notas', 'Notas', '<textarea id="cli-notas" name="notas">' + esc(v('notas')) + '</textarea>', { largo: true }) +
+      '</div><p class="erro-form" hidden role="alert"></p>' +
+      '<div class="dlg-rodape">' + (c.id ? '<button type="button" class="btn perigo esq" data-act="excluir-cliente" data-id="' + esc(c.id) + '">Excluir cliente</button>' : '') +
+      '<button type="button" class="btn" data-act="fechar">Cancelar</button><button type="submit" class="btn primario">Salvar</button></div></form>';
+    BC.dialogo(html);
+  };
+  BC.act['novo-cliente'] = function () { BC.abrirCliente(null); };
+  BC.act['editar-cliente'] = function (el) { BC.abrirCliente(S.get('clientes', el.dataset.id)); };
+  BC.forms.cliente = function (form) {
+    var d = BC.dados(form), id = form.dataset.id, pid = form.dataset.prospect;
+    var row = {
+      nome: BC.txt(d.nome), segmento: BC.txt(d.segmento), contato_nome: BC.txt(d.contato_nome), whatsapp: BC.txt(d.whatsapp),
+      instagram: C.normalizarInstagram(d.instagram), mensalidade: Number(d.mensalidade) || 0, inicio: d.inicio,
+      duracao_meses: Number(d.duracao_meses) || 3, verba_mensal: BC.num(d.verba_mensal), meta_leads_semana: BC.num(d.meta_leads_semana),
+      meta_cpl: BC.num(d.meta_cpl), notas: BC.txt(d.notas)
+    };
+    if (!row.nome) return BC.erroForm(form, 'Informe o nome do cliente.');
+    if (!row.inicio) return BC.erroForm(form, 'Informe a data de início.');
+    BC.seguro(async function () {
+      var r;
+      if (id) r = await S.update('clientes', id, row);
+      else {
+        row.status = 'ativo';
+        if (pid) row.prospect_id = pid;
+        r = await S.insert('clientes', row);
+        if (pid) {
+          var p = S.get('prospects', pid);
+          if (p) {
+            await S.update('prospects', pid, { etapa: 'fechado', etapa_max: 'fechado', cliente_id: r.id, proxima_data: null, proxima_acao: '', atualizado_em: new Date().toISOString() });
+            await S.insert('atividades', { prospect_id: pid, tipo: 'etapa', canal: '', texto: 'Virou cliente' });
+          }
+        }
+      }
+      BC.fechar(form);
+      BC.toast(id ? 'Cliente atualizado.' : 'Cliente cadastrado.');
+      if (!id) location.hash = '#c-' + r.id;
+    }, form);
+  };
+  BC.act['excluir-cliente'] = function (el) {
+    if (!el.dataset.confirmar) { el.dataset.confirmar = '1'; el.textContent = 'Confirmar exclusão'; return; }
+    BC.seguro(async function () {
+      var id = el.dataset.id;
+      var filhos = S.all('checkins').filter(function (k) { return k.cliente_id === id; });
+      for (var i = 0; i < filhos.length; i++) await S.remove('checkins', filhos[i].id);
+      filhos = S.all('feedbacks').filter(function (f) { return f.cliente_id === id; });
+      for (i = 0; i < filhos.length; i++) await S.remove('feedbacks', filhos[i].id);
+      var ps = S.all('prospects').filter(function (p) { return p.cliente_id === id; });
+      for (i = 0; i < ps.length; i++) await S.update('prospects', ps[i].id, { cliente_id: null });
+      await S.remove('clientes', id);
+      BC.fechar(el); location.hash = '#clientes';
+      BC.toast('Cliente excluído.');
+    });
+  };
+
+  // ───────────── check-in semanal ─────────────
+  BC.abrirCheckin = function (clienteId, semana) {
+    var ativos = S.all('clientes').filter(function (c) { return c.status !== 'churn'; }).sort(porNome);
+    if (!ativos.length) { BC.toast('Cadastre um cliente antes de fazer o check-in.', true); return; }
+    clienteId = clienteId || ativos[0].id;
+    semana = semana || C.inicioSemana(C.hoje());
+    var aberto = document.querySelector('dialog[data-checkin]');
+    if (aberto) aberto.remove();
+    var ex = S.all('checkins').filter(function (k) { return k.cliente_id === clienteId && k.semana === semana; })[0] || {};
+    var semanas = [];
+    for (var i = 0; i < 8; i++) { var s = C.addDias(C.inicioSemana(C.hoje()), -7 * i); semanas.push([s, 'Semana de ' + BC.dataCurta(s) + (i === 0 ? ' (atual)' : '')]); }
+    if (!semanas.some(function (x) { return x[0] === semana; })) semanas.push([semana, 'Semana de ' + BC.dataCurta(semana)]);
+    var gat = ex.gatilhos || [];
+
+    var crit = C.CRITERIOS.map(function (k) {
+      var seg = '<div class="seg" role="radiogroup" aria-label="' + esc(k.nome) + '">';
+      for (var n = 1; n <= 5; n++) seg += '<label><input type="radio" name="r_' + k.id + '" value="' + n + '"' + (Number(ex['r_' + k.id]) === n ? ' checked' : '') + '><span>' + n + '</span></label>';
+      seg += '</div>';
+      return '<div class="crit"><div><span class="nome">' + esc(k.nome) + '</span><span class="peso">peso ' + k.peso + '</span><div class="q">' + esc(k.pergunta) + '</div>' +
+        '<div class="q faint">1 = ' + esc(k.ancoras[1]) + ' · 3 = ' + esc(k.ancoras[3]) + ' · 5 = ' + esc(k.ancoras[5]) + '</div></div>' + seg + '</div>';
+    }).join('');
+    var checks = C.GATILHOS.map(function (g) {
+      return '<label class="check"><input type="checkbox" name="gatilhos" value="' + g.id + '"' + (gat.indexOf(g.id) >= 0 ? ' checked' : '') + '><span>' + esc(g.texto) + '</span></label>';
+    }).join('');
+
+    var html = '<form class="dlg" data-form="checkin" data-live="checkin" data-id="' + esc(ex.id || '') + '">' +
+      BC.cabDialogo('Check-in semanal', ex.id ? 'Editando um check-in já registrado.' : 'Resultado, relacionamento e sinais da semana.') +
+      '<div class="grade">' +
+      campo('ck-cliente_id', 'Cliente', '<select id="ck-cliente_id" name="cliente_id" data-change="troca-checkin">' + opcoes(ativos.map(function (c) { return [c.id, c.nome]; }), clienteId) + '</select>') +
+      campo('ck-semana', 'Semana', '<select id="ck-semana" name="semana" data-change="troca-checkin">' + opcoes(semanas, semana) + '</select>') +
+      '</div>' +
+      '<div class="secao"><h2>Resultado dos últimos 7 dias</h2><div class="grade">' +
+      campo('ck-investimento', 'Investido em anúncios (R$)', inp('ck-investimento', 'number', ex.investimento, 'min="0" step="any" inputmode="decimal"')) +
+      campo('ck-leads', 'Leads', inp('ck-leads', 'number', ex.leads, 'min="0" step="1" inputmode="numeric"')) +
+      campo('ck-vendas', 'Vendas informadas pelo cliente', inp('ck-vendas', 'number', ex.vendas, 'min="0" step="1" inputmode="numeric"')) +
+      campo('ck-faturamento', 'Faturamento do cliente (R$)', inp('ck-faturamento', 'number', ex.faturamento, 'min="0" step="any" inputmode="decimal"'), { dica: 'Opcional, se ele informar.' }) +
+      '</div><p class="small muted">CPL da semana: <strong class="mono" data-out="cpl">—</strong></p></div>' +
+      '<div class="secao"><h2>PDCA da semana</h2><div class="grade">' +
+      campo('ck-feito', 'O que eu fiz (Do / Act)', '<textarea id="ck-feito" name="feito">' + esc(ex.feito || '') + '</textarea>') +
+      campo('ck-proximo', 'Próxima ação (Plan)', '<textarea id="ck-proximo" name="proximo">' + esc(ex.proximo || '') + '</textarea>') +
+      '</div></div>' +
+      '<div class="secao"><h2>Relacionamento</h2><p class="small muted">Notas de 1 a 5 avaliando o cliente, não a agência. Deixe tudo em branco para pular nesta semana.</p>' + crit +
+      '<div class="notaviva" data-out="nota"><span class="muted small">Responda os cinco critérios para ver a nota.</span></div>' +
+      '<div class="campo" data-just hidden><label for="ck-justificativa">Justificativa (obrigatória para nota abaixo de 7 ou a partir de 9,5)</label><textarea id="ck-justificativa" name="justificativa">' + esc(ex.justificativa || '') + '</textarea></div></div>' +
+      '<div class="secao"><h2>Sinais de desengajamento</h2><p class="small muted">Marque o que apareceu nesta semana.</p><div class="checks">' + checks + '</div></div>' +
+      '<p class="erro-form" hidden role="alert"></p>' +
+      '<div class="dlg-rodape"><button type="button" class="btn" data-act="fechar">Cancelar</button><button type="submit" class="btn primario">Salvar check-in</button></div></form>';
+    var dlg = BC.dialogo(html, { semFoco: true });
+    dlg.setAttribute('data-checkin', '1');
+    BC.live.checkin(dlg.querySelector('form'));
+  };
+  BC.act['checkin'] = function (el) { BC.abrirCheckin(el.dataset.id, el.dataset.semana || null); };
+  BC.act['troca-checkin'] = function (el) {
+    var f = el.closest('form'), d = BC.dados(f);
+    BC.abrirCheckin(d.cliente_id, d.semana);
+  };
+  BC.live = BC.live || {};
+  BC.live.checkin = function (form) {
+    var d = BC.dados(form);
+    var cp = C.cpl(BC.num(d.investimento), BC.num(d.leads));
+    form.querySelector('[data-out=cpl]').textContent = cp == null ? '—' : BC.brl2(cp);
+    var nota = C.notaRelacionamento({ confianca: d.r_confianca, aderencia: d.r_aderencia, postura: d.r_postura, presenca: d.r_presenca, insumos: d.r_insumos });
+    var out = form.querySelector('[data-out=nota]'), just = form.querySelector('[data-just]'), ta = just.querySelector('textarea');
+    if (nota == null) {
+      out.innerHTML = '<span class="muted small">Responda os cinco critérios para ver a nota.</span>';
+      just.hidden = true; ta.required = false;
+    } else {
+      out.innerHTML = '<span class="grande">' + BC.n1(nota) + '</span>' + BC.pillRel(nota);
+      var exige = C.exigeJustificativa(nota);
+      just.hidden = !exige; ta.required = exige;
+    }
+  };
+  BC.forms.checkin = function (form) {
+    var d = BC.dados(form), id = form.dataset.id;
+    var rel = { confianca: d.r_confianca, aderencia: d.r_aderencia, postura: d.r_postura, presenca: d.r_presenca, insumos: d.r_insumos };
+    var respondidos = Object.keys(rel).filter(function (k) { return rel[k] != null && rel[k] !== ''; }).length;
+    if (respondidos > 0 && respondidos < 5) return BC.erroForm(form, 'Responda os cinco critérios de relacionamento ou deixe todos em branco.');
+    var nota = respondidos === 5 ? C.notaRelacionamento(rel) : null;
+    if (C.exigeJustificativa(nota) && !BC.txt(d.justificativa)) return BC.erroForm(form, 'Escreva a justificativa da nota (obrigatória abaixo de 7 ou a partir de 9,5).');
+    var gat = d.gatilhos == null ? [] : (Array.isArray(d.gatilhos) ? d.gatilhos : [d.gatilhos]);
+    var row = {
+      cliente_id: d.cliente_id, semana: d.semana,
+      investimento: BC.num(d.investimento), leads: BC.num(d.leads), vendas: BC.num(d.vendas), faturamento: BC.num(d.faturamento),
+      feito: BC.txt(d.feito), proximo: BC.txt(d.proximo),
+      r_confianca: nota == null ? null : Number(rel.confianca), r_aderencia: nota == null ? null : Number(rel.aderencia),
+      r_postura: nota == null ? null : Number(rel.postura), r_presenca: nota == null ? null : Number(rel.presenca), r_insumos: nota == null ? null : Number(rel.insumos),
+      nota_rel: nota, justificativa: C.exigeJustificativa(nota) ? BC.txt(d.justificativa) : '', gatilhos: gat
+    };
+    BC.seguro(async function () {
+      var igual = S.all('checkins').filter(function (k) { return k.cliente_id === row.cliente_id && k.semana === row.semana; })[0];
+      if (id || igual) await S.update('checkins', id || igual.id, row); else await S.insert('checkins', row);
+      BC.fechar(form);
+      BC.toast('Check-in salvo.');
+    }, form);
+  };
+
+  // ───────────── feedback ─────────────
+  BC.abrirFeedback = function (clienteId) {
+    var cli = S.get('clientes', clienteId); if (!cli) return;
+    var tons = [['positivo', 'Positivo'], ['neutro', 'Neutro'], ['negativo', 'Negativo']];
+    var html = '<form class="dlg" data-form="feedback" data-cliente="' + esc(clienteId) + '">' +
+      BC.cabDialogo('Novo feedback', cli.nome) +
+      '<div class="grade">' +
+      campo('fb-data', 'Data', inp('fb-data', 'date', C.hoje(), 'required')) +
+      campo('fb-canal', 'Onde aconteceu', '<select id="fb-canal" name="canal">' + opcoes([['whatsapp', 'WhatsApp'], ['reuniao', 'Reunião'], ['ligacao', 'Ligação'], ['outro', 'Outro']], 'whatsapp') + '</select>') +
+      '<div class="campo largo"><span class="rotulo">Tom</span><div class="seg" role="radiogroup" aria-label="Tom do feedback">' +
+      tons.map(function (t) { return '<label><input type="radio" name="tom" value="' + t[0] + '"' + (t[0] === 'neutro' ? ' checked' : '') + '><span style="width:auto;padding:0 16px">' + t[1] + '</span></label>'; }).join('') + '</div></div>' +
+      campo('fb-texto', 'O que o cliente disse', '<textarea id="fb-texto" name="texto" required></textarea>', { largo: true }) +
+      '</div><p class="erro-form" hidden role="alert"></p>' +
+      '<div class="dlg-rodape"><button type="button" class="btn" data-act="fechar">Cancelar</button><button type="submit" class="btn primario">Salvar feedback</button></div></form>';
+    BC.dialogo(html);
+  };
+  BC.act['novo-feedback'] = function (el) { BC.abrirFeedback(el.dataset.id); };
+  BC.forms.feedback = function (form) {
+    var d = BC.dados(form);
+    if (!BC.txt(d.texto)) return BC.erroForm(form, 'Escreva o feedback.');
+    BC.seguro(async function () {
+      await S.insert('feedbacks', { cliente_id: form.dataset.cliente, data: d.data, canal: d.canal, tom: d.tom || 'neutro', texto: BC.txt(d.texto) });
+      BC.fechar(form); BC.toast('Feedback registrado.');
+    }, form);
+  };
+  BC.act['excluir-feedback'] = function (el) { BC.seguro(async function () { await S.remove('feedbacks', el.dataset.id); BC.toast('Feedback removido.'); }); };
+
+  // ───────────── churn ─────────────
+  BC.abrirChurn = function (clienteId) {
+    var cli = S.get('clientes', clienteId); if (!cli) return;
+    var lista = C.MOTIVOS_SAIDA.map(function (m, i) {
+      return '<label><input type="radio" name="motivo" value="' + m.id + '"><span class="ord">' + (i + 1) + '</span><span><span class="t">' + esc(m.nome) + '</span><br><span class="d">' + esc(m.def) + '</span></span></label>';
+    }).join('');
+    var html = '<form class="dlg" data-form="churn" data-id="' + esc(clienteId) + '">' +
+      BC.cabDialogo('Registrar churn', cli.nome) +
+      '<div class="grade">' + campo('ch-data', 'Data da saída', inp('ch-data', 'date', C.hoje(), 'required'), { dica: 'O LT e o LTV ficam congelados nesta data.' }) + '</div>' +
+      '<div class="campo"><span class="rotulo">Motivo da saída</span><p class="small muted">Percorra a lista de cima para baixo e pare no primeiro motivo que explica a saída.</p>' +
+      '<div class="cascata" role="radiogroup" aria-label="Motivo da saída">' + lista + '</div>' +
+      '<small>“Não pagou” não é motivo: o atraso decorre de alguma das causas acima. “Cliente fora do perfil” também não vale, porque tira o foco da entrega.</small></div>' +
+      campo('ch-aprendizados', 'O que eu faria diferente (até 5 pontos)', '<textarea id="ch-aprendizados" name="aprendizados" required placeholder="Culpar o cliente não melhora a operação. Liste o que você mudaria."></textarea>', { largo: true }) +
+      '<p class="erro-form" hidden role="alert"></p>' +
+      '<div class="dlg-rodape"><button type="button" class="btn" data-act="fechar">Cancelar</button><button type="submit" class="btn perigo">Registrar churn</button></div></form>';
+    BC.dialogo(html);
+  };
+  BC.act['churn'] = function (el) { BC.abrirChurn(el.dataset.id); };
+  BC.forms.churn = function (form) {
+    var d = BC.dados(form);
+    if (!d.motivo) return BC.erroForm(form, 'Escolha o motivo da saída.');
+    if (!BC.txt(d.aprendizados)) return BC.erroForm(form, 'Escreva o que você faria diferente.');
+    BC.seguro(async function () {
+      await S.update('clientes', form.dataset.id, { status: 'churn', churn_data: d.data, churn_motivo: d.motivo, churn_aprendizados: BC.txt(d.aprendizados) });
+      BC.fechar(form); BC.toast('Churn registrado.');
+      location.hash = '#churn';
+    }, form);
+  };
+  BC.act['reverter-churn'] = function (el) {
+    BC.seguro(async function () {
+      await S.update('clientes', el.dataset.id, { status: 'ativo', churn_data: null, churn_motivo: null, churn_aprendizados: null });
+      BC.toast('Cliente voltou para a carteira.');
+      location.hash = '#c-' + el.dataset.id;
+    });
+  };
+})(window);
+
+</script>
+<script>
+/* Agência BC · diálogos da prospecção: contato, toque, perda, conversão e importação de planilha. */
+(function (root) {
+  'use strict';
+  var C = root.BCCalc, S = root.BCStore, BC = root.BC, esc = BC.esc;
+
+  function campo(id, rotulo, input, extra) {
+    extra = extra || {};
+    return '<div class="campo' + (extra.largo ? ' largo' : '') + '"><label for="' + id + '">' + rotulo + '</label>' + input + (extra.dica ? '<small>' + extra.dica + '</small>' : '') + '</div>';
+  }
+  function opcoes(lista, atual) {
+    return lista.map(function (o) { return '<option value="' + esc(o[0]) + '"' + (String(o[0]) === String(atual) ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('');
+  }
+  var ORIGENS = [['lista', 'Lista de prospecção'], ['meta_ads', 'Meta Ads (lead do anúncio)'], ['indicacao', 'Indicação'], ['outro', 'Outro']];
+  var CANAIS = [['whatsapp', 'WhatsApp'], ['instagram', 'Instagram DM'], ['email', 'E-mail'], ['ligacao', 'Ligação'], ['linkedin', 'LinkedIn'], ['presencial', 'Presencial']];
+  var MOTIVOS_PERDA = ['Sem resposta', 'Sem verba para anúncios', 'Já tem gestor de tráfego', 'Sem interesse', 'Não é o momento', 'Outro'];
+  var DICAS_ETAPA = {
+    novo: 'Antes de abordar, deixe a mensagem de abordagem e o mini-diagnóstico prontos para quando o lead responder.',
+    abordado: 'Programe o próximo follow-up. Se ele responder, o mini-diagnóstico já deve estar pronto.',
+    respondeu: 'Ele respondeu: envie o mini-diagnóstico agora.',
+    diagnostico: 'Diagnóstico enviado. Próximo passo: propor uma reunião para apresentá-lo.',
+    reuniao: 'Depois da reunião, envie a proposta (validade de 7 dias).',
+    proposta: 'Proposta enviada. Cobre o retorno antes de ela vencer.'
+  };
+  function idx(etapa) { return C.ORDEM_FUNIL.indexOf(etapa); }
+  function maiorEtapa(atual, nova) { return idx(nova) > idx(atual) ? nova : (idx(atual) < 0 ? nova : atual); }
+  function agora() { return new Date().toISOString(); }
+
+  // ───────────── contato: gaveta lateral com os dados editáveis ─────────────
+  BC.abrirProspect = function (id) {
+    var p = id ? S.get('prospects', id) : null;
+    if (!p) { BC.ui.novoAberto = true; BC.render(); return; }
+    var listas = S.all('listas');
+    var ativ = S.all('atividades').filter(function (a) { return a.prospect_id === id; }).sort(function (a, b) { return a.created_at < b.created_at ? 1 : -1; }).slice(0, 12);
+    var tipos = { toque: 'Toque', resposta: 'Resposta', etapa: 'Etapa', nota: 'Nota' };
+    var cad = p.created_at ? BC.dataCurta(C.dataLocalDe(p.created_at)) : '—';
+    var prox = C.ORDEM_FUNIL[idx(p.etapa) + 1];
+
+    var html = '<form class="dlg gv" data-form="prospect" data-id="' + esc(id) + '">' +
+      '<div class="gv-cab"><div><h3>' + esc(p.nome || p.negocio) + '</h3><p>' + esc([p.negocio, BC.nomeEtapa(p.etapa)].filter(Boolean).join(' · ')) + '</p></div>' +
+      '<button type="button" class="gv-x" data-act="fechar" aria-label="Fechar">&times;</button></div>' +
+      '<div class="gv-corpo">' +
+      (DICAS_ETAPA[p.etapa] ? '<div class="aviso" style="margin:0">' + esc(DICAS_ETAPA[p.etapa]) + '</div>' : '') +
+      campo('pr-nome', 'Nome', '<input id="pr-nome" name="nome" type="text" required autocomplete="off" value="' + esc(p.nome || '') + '">') +
+      campo('pr-negocio', 'Negócio / nicho', '<input id="pr-negocio" name="negocio" type="text" value="' + esc(p.negocio || '') + '">') +
+      campo('pr-telefone', 'Telefone / WhatsApp', '<input id="pr-telefone" name="telefone" type="tel" inputmode="tel" value="' + esc(p.telefone || '') + '">') +
+      campo('pr-email', 'E-mail', '<input id="pr-email" name="email" type="email" value="' + esc(p.email || '') + '">') +
+      campo('pr-instagram', '@ do Instagram', '<input id="pr-instagram" name="instagram" type="text" value="' + esc(p.instagram ? '@' + p.instagram : '') + '">') +
+      campo('pr-canal', 'Canal', '<select id="pr-canal" name="canal">' + opcoes(CANAIS, p.canal) + '</select>') +
+      campo('pr-etapa', 'Etapa', '<select id="pr-etapa" name="etapa">' + opcoes(C.ETAPAS.map(function (e) { return [e.id, e.nome]; }), p.etapa) + '</select>') +
+      campo('pr-proxima_data', 'Próxima etapa', '<input id="pr-proxima_data" name="proxima_data" type="date" value="' + esc(p.proxima_data || '') + '">') +
+      campo('pr-proxima_acao', 'O que fazer na próxima etapa', '<input id="pr-proxima_acao" name="proxima_acao" type="text" value="' + esc(p.proxima_acao || '') + '" placeholder="Ex.: Follow-up 1">') +
+      campo('pr-notas', 'Anotações da conversa', '<textarea id="pr-notas" name="notas" placeholder="O que ele falou, o que ficou combinado, quando retomar...">' + esc(p.notas || '') + '</textarea>') +
+      campo('pr-abordagem', 'Mensagem de abordagem', '<textarea id="pr-abordagem" name="abordagem" placeholder="A mensagem que você vai enviar neste primeiro contato.">' + esc(p.abordagem || '') + '</textarea>') +
+      campo('pr-diagnostico', 'Mini-diagnóstico (entregável)', '<textarea id="pr-diagnostico" name="diagnostico" placeholder="Resumo ou link do mini-diagnóstico, pronto para enviar se ele responder.">' + esc(p.diagnostico || '') + '</textarea>') +
+      (p.etapa === 'perdido' ? campo('pr-motivo_perda', 'Motivo da perda', '<input id="pr-motivo_perda" name="motivo_perda" type="text" value="' + esc(p.motivo_perda || '') + '">') : '') +
+      '<div class="gv-links">' + BC.iconesContato(p) + '</div>' +
+      '<details class="gv-mais"><summary>Mais detalhes</summary><div class="gv-mais-corpo">' +
+      campo('pr-nicho', 'Nicho', '<input id="pr-nicho" name="nicho" type="text" value="' + esc(p.nicho || '') + '">') +
+      campo('pr-cidade', 'Cidade', '<input id="pr-cidade" name="cidade" type="text" value="' + esc(p.cidade || '') + '">') +
+      campo('pr-origem', 'Origem', '<select id="pr-origem" name="origem">' + opcoes(ORIGENS, p.origem) + '</select>') +
+      campo('pr-campanha', 'Campanha / formulário', '<input id="pr-campanha" name="campanha" type="text" value="' + esc(p.campanha || '') + '">') +
+      campo('pr-lista_id', 'Lista', '<select id="pr-lista_id" name="lista_id"><option value="">Sem lista</option>' + opcoes(listas.map(function (l) { return [l.id, l.nome]; }), p.lista_id || '') + '</select>') +
+      '</div></details>' +
+      '<div class="gv-acoes"><button type="button" class="btn mini primario" data-act="toque" data-id="' + esc(id) + '">Registrar toque</button>' +
+      (p.etapa === 'abordado' || p.etapa === 'novo' ? '<button type="button" class="btn mini" data-act="respondeu" data-id="' + esc(id) + '">Respondeu</button>' : '') +
+      (p.cliente_id ? '<a class="btn mini" href="#c-' + esc(p.cliente_id) + '" data-act="fechar-e-ir">Ver cliente</a>' : (p.etapa !== 'fechado' ? '<button type="button" class="btn mini" data-act="converter" data-id="' + esc(id) + '">Converter em cliente</button>' : '')) +
+      (p.etapa !== 'perdido' && p.etapa !== 'fechado' ? '<button type="button" class="btn mini fantasma" data-act="perdido" data-id="' + esc(id) + '">Marcar como perdido</button>' : '') + '</div>' +
+      '<div class="gv-hist"><h2>Histórico</h2>' + (ativ.length ? '<ul class="linhas">' + ativ.map(function (a) {
+        var d = new Date(a.created_at);
+        return '<li><div class="corpo"><div class="small"><span class="tag">' + (tipos[a.tipo] || a.tipo) + '</span> ' + BC.dataCurta(C.toISO(d)) + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + (a.canal ? ' · ' + esc(a.canal) : '') + '</div>' + (a.texto ? '<div class="det">' + esc(a.texto) + '</div>' : '') + '</div></li>';
+      }).join('') + '</ul>' : '<p class="small faint">Nenhum toque registrado ainda.</p>') + '</div>' +
+      '<p class="small faint gv-meta">Cadastrado em ' + cad + ' · etapa atual: <strong>' + esc(BC.nomeEtapa(p.etapa)) + '</strong>' + (p.proxima_data ? ' · próxima etapa em ' + BC.dataCurta(p.proxima_data) : '') + '</p>' +
+      '</div>' +
+      '<p class="erro-form" hidden role="alert" style="padding:0 20px"></p>' +
+      '<div class="gv-rodape"><button type="submit" class="btn primario">Salvar</button>' +
+      (prox ? '<button type="button" class="btn" data-act="avancar" data-id="' + esc(id) + '">Avançar etapa</button>' : '') +
+      '<button type="button" class="btn perigo" data-act="excluir-prospect" data-id="' + esc(id) + '">Excluir</button></div></form>';
+    BC.dialogo(html, { gaveta: true, semFoco: true });
+  };
+  BC.act['abrir-prospect'] = function (el) { BC.abrirProspect(el.dataset.id); };
+  BC.act['fechar-e-ir'] = function (el) { BC.fechar(el); };
+
+  BC.forms.prospect = function (form) {
+    var d = BC.dados(form), id = form.dataset.id;
+    var nome = BC.txt(d.nome) || BC.txt(d.negocio);
+    if (!nome) return BC.erroForm(form, 'Informe o nome do contato ou do negócio.');
+    var tel = BC.txt(d.telefone), telNorm = C.normalizarTelefone(tel);
+    var row = {
+      nome: nome, negocio: BC.txt(d.negocio), nicho: BC.txt(d.nicho), cidade: BC.txt(d.cidade), telefone: telNorm || tel,
+      email: BC.txt(d.email).toLowerCase(), instagram: C.normalizarInstagram(d.instagram), canal: d.canal, origem: d.origem, campanha: BC.txt(d.campanha),
+      lista_id: d.lista_id || null, etapa: d.etapa, proxima_data: d.proxima_data || null, proxima_acao: BC.txt(d.proxima_acao),
+      abordagem: BC.txt(d.abordagem), diagnostico: BC.txt(d.diagnostico), notas: BC.txt(d.notas), atualizado_em: agora()
+    };
+    if (d.motivo_perda != null) row.motivo_perda = BC.txt(d.motivo_perda);
+    BC.seguro(async function () {
+      if (id) {
+        var antigo = S.get('prospects', id);
+        row.etapa_max = maiorEtapa(C.etapaMax(antigo), row.etapa);
+        await S.update('prospects', id, row);
+        if (antigo.etapa !== row.etapa) await S.insert('atividades', { prospect_id: id, tipo: 'etapa', canal: '', texto: 'De ' + BC.nomeEtapa(antigo.etapa) + ' para ' + BC.nomeEtapa(row.etapa) });
+      } else {
+        row.etapa_max = idx(row.etapa) >= 0 ? row.etapa : 'novo'; row.toques = 0; row.motivo_perda = row.motivo_perda || ''; row.meta_lead_id = '';
+        await S.insert('prospects', row);
+      }
+      BC.ui.novoAberto = false;
+      BC.fechar(form); BC.toast(id ? 'Contato atualizado.' : 'Contato adicionado.');
+    }, form);
+  };
+  BC.act['excluir-prospect'] = function (el) {
+    if (!el.dataset.confirmar) { el.dataset.confirmar = '1'; el.textContent = 'Confirmar exclusão'; return; }
+    BC.seguro(async function () {
+      var id = el.dataset.id, ats = S.all('atividades').filter(function (a) { return a.prospect_id === id; });
+      for (var i = 0; i < ats.length; i++) await S.remove('atividades', ats[i].id);
+      await S.remove('prospects', id); BC.fechar(el); BC.toast('Contato excluído.');
+    });
+  };
+
+  // ───────────── toque ─────────────
+  BC.abrirToque = function (id) {
+    var p = S.get('prospects', id); if (!p) return;
+    var n = (Number(p.toques) || 0) + 1;
+    var padrao = n === 1 ? 1 : n === 2 ? 2 : n === 3 ? 3 : 7;
+    var presets = [[1, 'Amanhã'], [2, 'Em 2 dias'], [3, 'Em 3 dias'], [7, 'Em 7 dias'], [0, 'Sem follow-up']];
+    var html = '<form class="dlg" data-form="toque" data-id="' + esc(id) + '">' + BC.cabDialogo('Registrar toque ' + n, p.negocio || p.nome) +
+      '<div class="grade">' + campo('tq-canal', 'Canal', '<select id="tq-canal" name="canal">' + opcoes(CANAIS, p.canal) + '</select>') +
+      campo('tq-texto', 'O que foi enviado ou dito (opcional)', '<input id="tq-texto" name="texto" type="text" autocomplete="off">') + '</div>' +
+      '<div class="campo"><span class="rotulo">Próximo follow-up</span><div class="seg" role="radiogroup" aria-label="Próximo follow-up">' +
+      presets.map(function (x) { return '<label><input type="radio" name="dias" value="' + x[0] + '"' + (x[0] === padrao ? ' checked' : '') + '><span style="width:auto;padding:0 12px;font-family:var(--f-body);font-weight:500">' + x[1] + '</span></label>'; }).join('') + '</div></div>' +
+      '<div class="grade">' + campo('tq-proxima_acao', 'Próxima ação', '<input id="tq-proxima_acao" name="proxima_acao" type="text" value="Follow-up ' + n + '">') + '</div>' +
+      '<p class="erro-form" hidden role="alert"></p><div class="dlg-rodape"><button type="button" class="btn" data-act="fechar">Cancelar</button><button type="submit" class="btn primario">Registrar toque</button></div></form>';
+    BC.dialogo(html, { estreito: true, semFoco: true });
+  };
+  BC.act['toque'] = function (el) { var d = el.closest('dialog'); if (d) d.close(); BC.abrirToque(el.dataset.id); };
+  BC.forms.toque = function (form) {
+    var d = BC.dados(form), id = form.dataset.id, p = S.get('prospects', id), dias = Number(d.dias) || 0;
+    BC.seguro(async function () {
+      var patch = {
+        toques: (Number(p.toques) || 0) + 1, canal: d.canal, atualizado_em: agora(),
+        proxima_data: dias ? C.addDias(C.hoje(), dias) : null, proxima_acao: dias ? BC.txt(d.proxima_acao) : ''
+      };
+      if (p.etapa === 'novo') { patch.etapa = 'abordado'; patch.etapa_max = maiorEtapa(C.etapaMax(p), 'abordado'); }
+      await S.update('prospects', id, patch);
+      await S.insert('atividades', { prospect_id: id, tipo: 'toque', canal: d.canal, texto: BC.txt(d.texto) });
+      BC.fechar(form); BC.toast('Toque registrado.');
+    }, form);
+  };
+
+  // ───────────── etapas ─────────────
+  async function mudarEtapa(id, nova, extra) {
+    var p = S.get('prospects', id);
+    var patch = Object.assign({ etapa: nova, etapa_max: maiorEtapa(C.etapaMax(p), nova), atualizado_em: agora() }, extra || {});
+    await S.update('prospects', id, patch);
+    await S.insert('atividades', { prospect_id: id, tipo: nova === 'respondeu' ? 'resposta' : 'etapa', canal: '', texto: 'De ' + BC.nomeEtapa(p.etapa) + ' para ' + BC.nomeEtapa(nova) });
+  }
+  BC.act['respondeu'] = function (el) {
+    BC.seguro(async function () {
+      await mudarEtapa(el.dataset.id, 'respondeu', { proxima_data: C.hoje(), proxima_acao: 'Enviar o mini-diagnóstico' });
+      BC.toast('Ele respondeu. Hora de enviar o mini-diagnóstico.');
+    });
+  };
+  BC.act['avancar'] = function (el) {
+    var p = S.get('prospects', el.dataset.id); if (!p) return;
+    var prox = C.ORDEM_FUNIL[idx(p.etapa) + 1];
+    if (!prox) return;
+    var dlg = el.closest('dialog');
+    if (prox === 'fechado') { if (dlg) dlg.close(); BC.converterProspect(p.id); return; }
+    BC.seguro(async function () {
+      await mudarEtapa(p.id, prox, { proxima_data: null, proxima_acao: '' });
+      if (dlg) dlg.close();
+      BC.toast('Movido para ' + BC.nomeEtapa(prox) + '.');
+    });
+  };
+  BC.converterProspect = function (id) {
+    var p = S.get('prospects', id); if (!p) return;
+    BC.abrirCliente(null, {
+      nome: p.negocio || p.nome, contato_nome: p.negocio && p.nome !== p.negocio ? p.nome : '', whatsapp: p.telefone,
+      instagram: p.instagram, segmento: p.nicho, prospect_id: p.id
+    });
+  };
+  BC.act['converter'] = function (el) { var d = el.closest('dialog'); if (d) d.close(); BC.converterProspect(el.dataset.id); };
+
+  BC.act['perdido'] = function (el) {
+    var p = S.get('prospects', el.dataset.id); if (!p) return;
+    var d0 = el.closest('dialog'); if (d0) d0.close();
+    var html = '<form class="dlg" data-form="perdido" data-id="' + esc(p.id) + '">' + BC.cabDialogo('Marcar como perdido', p.negocio || p.nome) +
+      campo('pd-motivo', 'Motivo', '<select id="pd-motivo" name="motivo">' + opcoes(MOTIVOS_PERDA.map(function (m) { return [m, m]; }), 'Sem resposta') + '</select>') +
+      '<div class="dlg-rodape"><button type="button" class="btn" data-act="fechar">Cancelar</button><button type="submit" class="btn perigo">Marcar como perdido</button></div></form>';
+    BC.dialogo(html, { estreito: true });
+  };
+  BC.forms.perdido = function (form) {
+    var d = BC.dados(form);
+    BC.seguro(async function () {
+      await mudarEtapa(form.dataset.id, 'perdido', { proxima_data: null, proxima_acao: '', motivo_perda: d.motivo });
+      BC.fechar(form); BC.toast('Contato marcado como perdido.');
+    }, form);
+  };
+
+  // ───────────── importação de planilha ─────────────
+  var CAMPOS_IMP = [['nome', 'Nome do contato'], ['negocio', 'Negócio'], ['telefone', 'Telefone / WhatsApp'], ['instagram', 'Instagram'], ['email', 'E-mail'], ['cidade', 'Cidade'], ['nicho', 'Nicho']];
+  BC.imp = { parsed: null, arquivo: '' };
+
+  BC.act['importar'] = function () {
+    BC.imp = { parsed: null, arquivo: '' };
+    var html = '<div class="dlg" data-importacao>' + BC.cabDialogo('Importar planilha de prospecção', 'No Google Sheets: Arquivo → Baixar → Valores separados por vírgula (.csv).') +
+      '<div id="imp-passo1" class="secao" style="border-top:0;padding-top:0">' +
+      campo('imp-arq', 'Arquivo CSV', '<input id="imp-arq" type="file" accept=".csv,.tsv,.txt,text/csv,text/plain" data-change="imp-arquivo">') +
+      campo('imp-colar', 'Ou cole as linhas da planilha aqui', '<textarea id="imp-colar" style="min-height:90px" placeholder="Nome;Empresa;WhatsApp&#10;..."></textarea>') +
+      '<p class="erro-form" id="imp-erro" hidden role="alert"></p>' +
+      '<div class="dlg-rodape"><button type="button" class="btn" data-act="fechar">Cancelar</button><button type="button" class="btn primario" data-act="imp-ler">Ler planilha</button></div></div>' +
+      '<form id="imp-passo2" data-form="importar" hidden></form></div>';
+    BC.dialogo(html, { semFoco: true });
+  };
+  BC.act['imp-arquivo'] = function (el) {
+    var f = el.files && el.files[0]; if (!f) return;
+    var r = new FileReader();
+    BC.imp.arquivo = f.name.replace(/\.[^.]+$/, '');
+    r.onload = function () { var ta = document.getElementById('imp-colar'); if (ta) ta.value = r.result; BC.act['imp-ler'](el); };
+    r.onerror = function () { BC.toast('Não consegui ler o arquivo.', true); };
+    r.readAsText(f);
+  };
+  BC.act['imp-ler'] = function (el) {
+    var raiz = el.closest('[data-importacao]'), ta = raiz.querySelector('#imp-colar'), erro = raiz.querySelector('#imp-erro');
+    var parsed = C.parseCSV(ta.value || '');
+    if (!parsed.headers.length || !parsed.rows.length) { erro.textContent = 'Não encontrei linhas. Confira se o arquivo é um CSV com cabeçalho na primeira linha.'; erro.hidden = false; return; }
+    erro.hidden = true; BC.imp.parsed = parsed;
+    var mapa = C.adivinharMapeamento(parsed.headers);
+    var nomeLista = BC.imp.arquivo || ('Importação de ' + BC.dataCurta(C.hoje()));
+    var f = raiz.querySelector('#imp-passo2');
+    f.innerHTML = '<div class="secao" style="border-top:0;padding-top:0"><p class="small muted"><strong>' + parsed.rows.length + '</strong> linhas lidas. Confira quais colunas correspondem a cada campo.</p>' +
+      '<div class="mapa">' + CAMPOS_IMP.map(function (c) {
+        return '<div class="campo"><label for="map-' + c[0] + '">' + c[1] + '</label><select id="map-' + c[0] + '" name="map_' + c[0] + '" data-change="imp-mapa"><option value="-1">— não importar —</option>' +
+          parsed.headers.map(function (h, i) { return '<option value="' + i + '"' + (mapa[c[0]] === i ? ' selected' : '') + '>' + esc(h || 'Coluna ' + (i + 1)) + '</option>'; }).join('') + '</select></div>';
+      }).join('') + '</div>' +
+      '<label class="check"><input type="checkbox" name="extras" value="1" checked data-change="imp-mapa"><span>Guardar as colunas não mapeadas nas notas de cada contato (ex.: faixa, avaliação)</span></label></div>' +
+      '<div class="secao"><h2>Destino</h2><div class="grade">' +
+      campo('imp-lista', 'Nome da lista', '<input id="imp-lista" name="lista" type="text" required value="' + esc(nomeLista) + '">') +
+      campo('imp-nicho', 'Nicho padrão', '<input id="imp-nicho" name="nicho" type="text" placeholder="Usado quando a planilha não tem nicho">') +
+      campo('imp-cidade', 'Cidade padrão', '<input id="imp-cidade" name="cidade" type="text">') +
+      campo('imp-canal', 'Canal do primeiro toque', '<select id="imp-canal" name="canal">' + opcoes(CANAIS, 'whatsapp') + '</select>') + '</div></div>' +
+      '<div class="secao"><h2>Prévia</h2><div class="previa"><table class="tabela"><thead><tr>' + parsed.headers.map(function (h) { return '<th>' + esc(h) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+      parsed.rows.slice(0, 5).map(function (r) { return '<tr>' + parsed.headers.map(function (_, i) { return '<td>' + esc(r[i] || '') + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>' +
+      '<p class="small" data-out="resumo-imp"></p></div>' +
+      '<p class="erro-form" hidden role="alert"></p><div class="dlg-rodape"><button type="button" class="btn" data-act="fechar">Cancelar</button><button type="submit" class="btn primario" data-out="btn-imp">Importar</button></div>';
+    f.hidden = false; raiz.querySelector('#imp-passo1').hidden = true;
+    BC.act['imp-mapa'](f);
+  };
+  function montar(form) {
+    var d = BC.dados(form), parsed = BC.imp.parsed, mapa = {};
+    CAMPOS_IMP.forEach(function (c) { mapa[c[0]] = Number(d['map_' + c[0]]); if (isNaN(mapa[c[0]])) mapa[c[0]] = -1; });
+    var usadas = {}; Object.keys(mapa).forEach(function (k) { if (mapa[k] >= 0) usadas[mapa[k]] = true; });
+    var existentes = {}; S.all('prospects').forEach(function (p) { C.chavesDedupe(p).forEach(function (k) { existentes[k] = true; }); });
+    var novos = [], dup = 0, vazio = 0;
+    parsed.rows.forEach(function (r) {
+      function g(c) { return mapa[c] >= 0 ? BC.txt(r[mapa[c]]) : ''; }
+      var tel = C.normalizarTelefone(g('telefone')), ig = C.normalizarInstagram(g('instagram'));
+      var nome = g('nome') || g('negocio') || ig || g('telefone');
+      if (!nome) { vazio++; return; }
+      var p = { nome: nome, negocio: g('negocio'), nicho: g('nicho') || BC.txt(d.nicho), cidade: g('cidade') || BC.txt(d.cidade), telefone: tel, email: g('email').toLowerCase(), instagram: ig };
+      var ks = C.chavesDedupe(p);
+      if (ks.some(function (k) { return existentes[k]; })) { dup++; return; }
+      ks.forEach(function (k) { existentes[k] = true; });
+      var notas = [];
+      if (d.extras) parsed.headers.forEach(function (h, i) { var v = BC.txt(r[i]); if (!usadas[i] && v) notas.push((h || 'Coluna ' + (i + 1)) + ': ' + v); });
+      p.notas = notas.join('\n');
+      novos.push(p);
+    });
+    return { novos: novos, dup: dup, vazio: vazio, d: d };
+  }
+  BC.act['imp-mapa'] = function (el) {
+    var form = el.closest ? el.closest('form') : el; if (!form || !BC.imp.parsed) return;
+    var r = montar(form);
+    form.querySelector('[data-out=resumo-imp]').innerHTML = '<strong>' + r.novos.length + '</strong> contatos serão importados' + (r.dup ? ' · ' + r.dup + ' repetidos (mesmo telefone, Instagram ou nome) serão ignorados' : '') + (r.vazio ? ' · ' + r.vazio + ' linhas sem nome ignoradas' : '') + '.';
+    var b = form.querySelector('[data-out=btn-imp]'); b.disabled = !r.novos.length; b.textContent = r.novos.length ? 'Importar ' + r.novos.length + ' contatos' : 'Nada para importar';
+  };
+  BC.forms.importar = function (form) {
+    var r = montar(form);
+    if (!r.novos.length) return BC.erroForm(form, 'Nenhum contato novo para importar.');
+    BC.seguro(async function () {
+      var lista = await S.insert('listas', { nome: BC.txt(r.d.lista) || 'Importação', nicho: BC.txt(r.d.nicho), cidade: BC.txt(r.d.cidade) });
+      var agoraIso = agora();
+      var linhas = r.novos.map(function (p) {
+        return Object.assign({ lista_id: lista.id, origem: 'lista', campanha: '', meta_lead_id: '', canal: r.d.canal || 'whatsapp', etapa: 'novo', etapa_max: 'novo', toques: 0, proxima_data: null, proxima_acao: '', abordagem: '', diagnostico: '', motivo_perda: '', cliente_id: null, atualizado_em: agoraIso }, p);
+      });
+      await S.insertMany('prospects', linhas);
+      BC.fechar(form);
+      BC.ui.abaPros = 'hoje';
+      BC.toast(linhas.length + ' contatos importados' + (r.dup ? ' (' + r.dup + ' repetidos ignorados)' : '') + '.');
+      location.hash = '#prospeccao';
+    }, form);
+  };
+})(window);
+
+</script>
+<script>
+/* Agência BC · telas da carteira: painel, clientes, ficha do cliente, churn, previsão, dados. */
+(function (root) {
+  'use strict';
+  var C = root.BCCalc, S = root.BCStore, BC = root.BC, esc = BC.esc;
+
+  // contexto compartilhado pelas telas
+  BC.ctx = function () {
+    var h = C.hoje(), clientes = S.all('clientes');
+    var ativos = clientes.filter(function (c) { return c.status !== 'churn'; });
+    var checkins = S.all('checkins'), feedbacks = S.all('feedbacks'), saude = {};
+    ativos.forEach(function (c) { saude[c.id] = C.saude(c, checkins, feedbacks, h); });
+    return { h: h, clientes: clientes, ativos: ativos, checkins: checkins, feedbacks: feedbacks, saude: saude, curva: C.curvaABC(ativos), semana: C.inicioSemana(h) };
+  };
+  function checkinsDe(x, id) {
+    return x.checkins.filter(function (k) { return k.cliente_id === id; }).sort(function (a, b) { return a.semana < b.semana ? 1 : (a.semana > b.semana ? -1 : 0); });
+  }
+  function linkCli(c) { return '<a href="#c-' + esc(c.id) + '" class="tit" style="text-decoration:none;color:inherit">' + esc(c.nome) + '</a>'; }
+  function soma(arr, f) { return C.soma(arr, f); }
+  var SEV = { vermelho: 0, amarelo: 1, verde: 2 };
+
+  function bannerExemplos() {
+    if (!S.temExemplos()) return '';
+    return '<div class="aviso"><span>Você está vendo <strong>dados de exemplo</strong> (clientes e contatos fictícios) para testar a ferramenta. Seus dados reais ficam misturados até você limpar.</span>' +
+      '<button class="btn mini" data-act="limpar-exemplos">Limpar exemplos</button></div>';
+  }
+  function bannerArmazenamento() {
+    if (S.persistente()) return '';
+    return '<div class="aviso warn"><span>Este navegador não está guardando os dados (armazenamento bloqueado). Eles valem só enquanto a página estiver aberta. No Supabase isso deixa de ser um problema.</span></div>';
+  }
+  function estadoVazio() {
+    return '<div class="bloco"><div class="vazio" style="padding:22px 0"><p><strong>Nenhum dado ainda.</strong></p>' +
+      '<p style="margin-top:6px">Cadastre seu primeiro cliente, importe uma planilha de prospecção ou carregue dados de exemplo para ver tudo funcionando.</p>' +
+      '<div class="pagehead-acoes" style="margin-top:14px"><button class="btn primario" data-act="novo-cliente">+ Cliente</button><button class="btn" data-act="importar">Importar planilha de prospecção</button><button class="btn" data-act="carregar-exemplos">Carregar exemplos</button></div></div></div>';
+  }
+
+  // ───────────── painel ─────────────
+  BC.views.painel = function () {
+    var x = BC.ctx(), h = x.h;
+    var mrr = soma(x.ativos, function (c) { return c.mensalidade; });
+    var atencao = x.ativos.filter(function (c) { return x.saude[c.id].farol !== 'verde'; })
+      .sort(function (a, b) { return x.saude[a.id].score - x.saude[b.id].score; });
+    var feitos = x.ativos.filter(function (c) { return x.checkins.some(function (k) { return k.cliente_id === c.id && k.semana === x.semana; }); });
+    var pend = x.ativos.filter(function (c) { return feitos.indexOf(c) < 0; });
+    var renov = x.ativos.filter(function (c) { return C.diasParaFim(c, h) <= 60; }).sort(function (a, b) { return C.diasParaFim(a, h) - C.diasParaFim(b, h); });
+
+    // prospecção
+    var meta = Number(S.cfg('meta_diaria', 5)) || 5;
+    var datas = S.all('atividades').filter(function (a) { return a.tipo === 'toque'; }).map(function (a) { return C.dataLocalDe(a.created_at); });
+    var sq = C.sequencia(datas, meta, h);
+    var abertos = S.all('prospects').filter(function (p) { return p.etapa !== 'fechado' && p.etapa !== 'perdido'; });
+    var devidos = abertos.filter(function (p) { return p.proxima_data && p.proxima_data <= h; });
+    var leadsNovos = abertos.filter(function (p) { return p.origem === 'meta_ads' && p.etapa === 'novo'; });
+
+    var out = '<div class="pagehead"><div><h1>Painel</h1><p class="sub">' + esc(BC.dataLonga(h)) + '</p></div>' +
+      '<div class="pagehead-acoes"><button class="btn primario" data-act="checkin">Check-in semanal</button><button class="btn" data-act="novo-cliente">+ Cliente</button></div></div>';
+    out += bannerArmazenamento() + bannerExemplos();
+    if (!S.temDados()) return out + estadoVazio();
+
+    out += '<div class="faixa">' +
+      '<div><div class="rot">MRR ativo</div><div class="val">' + BC.brl(mrr) + '</div><div class="nota">ticket médio ' + BC.brl(x.ativos.length ? mrr / x.ativos.length : 0) + '</div></div>' +
+      '<div><div class="rot">Clientes ativos</div><div class="val">' + x.ativos.length + '</div><div class="nota">LT médio ' + BC.n1(x.ativos.length ? soma(x.ativos, function (c) { return C.ltMeses(c, h); }) / x.ativos.length : 0) + ' meses</div></div>' +
+      '<div><div class="rot">Em atenção</div><div class="val">' + atencao.length + '</div><div class="nota">' + atencao.filter(function (c) { return x.saude[c.id].farol === 'vermelho'; }).length + ' em vermelho</div></div>' +
+      '<div><div class="rot">Check-ins da semana</div><div class="val">' + feitos.length + '<span class="faint" style="font-size:16px"> / ' + x.ativos.length + '</span></div><div class="nota">semana de ' + BC.dataCurta(x.semana) + '</div></div>' +
+      '</div>';
+
+    out += '<div class="colunas">';
+
+    // atenção
+    out += '<section class="bloco"><div class="bloco-cab"><h2>Clientes em atenção</h2><a href="#clientes" class="small">Ver carteira</a></div>';
+    if (!atencao.length) out += '<p class="vazio">Nenhum cliente em amarelo ou vermelho. Siga o ritmo dos check-ins.</p>';
+    else out += '<ul class="linhas">' + atencao.slice(0, 6).map(function (c) {
+      var s = x.saude[c.id];
+      return '<li><div class="corpo">' + linkCli(c) + ' ' + BC.pillFarol(s.farol, s.score) + '<div class="det">' +
+        s.motivos.slice(0, 2).map(function (m) { return esc(m.texto); }).join(' · ') + '</div></div>' +
+        '<div class="acoes"><button class="btn mini" data-act="checkin" data-id="' + esc(c.id) + '">Check-in</button></div></li>';
+    }).join('') + '</ul>';
+    out += '</section>';
+
+    // check-ins pendentes
+    out += '<section class="bloco"><div class="bloco-cab"><h2>Check-in da semana</h2><span class="small muted">' + feitos.length + ' de ' + x.ativos.length + ' feitos</span></div>';
+    out += '<div class="progresso' + (pend.length ? '' : ' ok') + '" style="margin-bottom:6px" role="progressbar" aria-valuenow="' + feitos.length + '" aria-valuemax="' + x.ativos.length + '"><i style="width:' + (x.ativos.length ? feitos.length / x.ativos.length * 100 : 0) + '%"></i></div>';
+    if (!pend.length) out += '<p class="vazio">Todos os check-ins da semana estão feitos.</p>';
+    else out += '<ul class="linhas">' + pend.map(function (c) {
+      var u = checkinsDe(x, c.id)[0];
+      return '<li><div class="corpo">' + linkCli(c) + '<div class="det">' + (u ? 'Último check-in: semana de ' + BC.dataCurta(u.semana) : 'Ainda sem check-in') + '</div></div>' +
+        '<div class="acoes"><button class="btn mini primario" data-act="checkin" data-id="' + esc(c.id) + '">Fazer check-in</button></div></li>';
+    }).join('') + '</ul>';
+    out += '</section>';
+
+    // prospecção hoje
+    out += '<section class="bloco"><div class="bloco-cab"><h2>CRM hoje</h2><a href="#prospeccao" class="small">Abrir CRM</a></div>' +
+      '<div class="resumo-pros" style="margin-bottom:10px"><div class="item"><div class="rot">Toques hoje</div><div class="val">' + sq.hoje + '<span class="faint" style="font-size:16px"> / ' + meta + '</span></div></div>' +
+      '<div class="item"><div class="rot">Sequência</div><div class="val">' + sq.streak + '<span class="faint" style="font-size:16px"> ' + (sq.streak === 1 ? 'dia útil' : 'dias úteis') + '</span></div></div></div>' +
+      '<div class="progresso' + (sq.hoje >= meta ? ' ok' : '') + '" style="margin-bottom:10px"><i style="width:' + Math.min(100, sq.hoje / meta * 100) + '%"></i></div>' +
+      '<ul class="linhas"><li><div class="corpo">Follow-ups para hoje ou atrasados</div><div class="num">' + devidos.length + '</div></li>' +
+      '<li><div class="corpo">Leads novos do tráfego pago</div><div class="num">' + leadsNovos.length + '</div></li>' +
+      '<li><div class="corpo">Contatos em andamento</div><div class="num">' + abertos.filter(function (p) { return p.etapa !== 'novo'; }).length + '</div></li></ul></section>';
+
+    // renovações
+    out += '<section class="bloco"><div class="bloco-cab"><h2>Contratos a renovar (60 dias)</h2></div>';
+    if (!renov.length) out += '<p class="vazio">Nenhum contrato termina nos próximos 60 dias.</p>';
+    else out += '<ul class="linhas">' + renov.map(function (c) {
+      var d = C.diasParaFim(c, h), s = x.saude[c.id];
+      return '<li><div class="corpo">' + linkCli(c) + ' ' + BC.pillFarol(s.farol) + '<div class="det">' + (d < 0 ? 'Venceu ' + BC.rotuloDias(d) : 'Termina ' + BC.rotuloDias(d)) + ' (' + BC.data(C.fimContrato(c)) + ') · ' + BC.brl(c.mensalidade) + '/mês</div></div>' +
+        '<div class="acoes"><button class="btn mini" data-act="novo-feedback" data-id="' + esc(c.id) + '">+ Feedback</button></div></li>';
+    }).join('') + '</ul>';
+    out += '</section></div>';
+    return out;
+  };
+
+  // ───────────── clientes ─────────────
+  BC.views.clientes = function () {
+    var x = BC.ctx(), h = x.h, ui = BC.ui;
+    var lista = x.ativos.slice().sort(function (a, b) { return x.saude[a.id].score - x.saude[b.id].score || String(a.nome).localeCompare(String(b.nome)); });
+    if (ui.filtroRisco) lista = lista.filter(function (c) { return x.saude[c.id].farol !== 'verde'; });
+    var mrr = soma(x.ativos, function (c) { return c.mensalidade; });
+
+    var out = '<div class="pagehead"><div><h1>Clientes</h1><p class="sub">' + x.ativos.length + ' ativos · MRR ' + BC.brl(mrr) + '</p></div>' +
+      '<div class="pagehead-acoes"><button class="btn' + (ui.filtroRisco ? ' primario' : '') + '" data-act="toggle-risco" aria-pressed="' + ui.filtroRisco + '">Só em atenção</button>' +
+      '<button class="btn primario" data-act="novo-cliente">+ Cliente</button></div></div>' + bannerExemplos();
+    if (!x.ativos.length) return out + '<p class="vazio">Nenhum cliente ativo. Use “+ Cliente” para cadastrar o primeiro.</p>';
+    out += '<div class="rolagem"><table class="tabela"><thead><tr><th>Cliente</th><th>Curva</th><th class="num">Mensalidade</th><th class="num hide-s">LT</th><th class="num hide-s">LTV</th>' +
+      '<th class="num hide-s">Leads / meta</th><th>Relacionamento</th><th>Farol</th><th class="hide-s">Contrato até</th><th></th></tr></thead><tbody>';
+    lista.forEach(function (c) {
+      var s = x.saude[c.id], u = checkinsDe(x, c.id)[0], rel = checkinsDe(x, c.id).filter(function (k) { return k.nota_rel != null; })[0];
+      out += '<tr class="clicavel" data-act="abrir-cliente" data-id="' + esc(c.id) + '">' +
+        '<td><div class="nome">' + esc(c.nome) + '</div><div class="small faint">' + esc(c.segmento || '') + (s.novo90 ? ' · <span class="tag acc">primeiros 90 dias</span>' : '') + '</div></td>' +
+        '<td><span class="curva ' + x.curva[c.id] + '" title="Curva por percentil de mensalidade">' + x.curva[c.id] + '</span></td>' +
+        '<td class="num">' + BC.brl(c.mensalidade) + '</td>' +
+        '<td class="num hide-s">' + BC.n1(C.ltMeses(c, h)) + ' m</td>' +
+        '<td class="num hide-s">' + BC.brl(C.ltv(c, h)) + '</td>' +
+        '<td class="num hide-s">' + (u && u.leads != null ? u.leads + (c.meta_leads_semana ? ' / ' + c.meta_leads_semana : '') : '—') + '</td>' +
+        '<td>' + BC.pillRel(rel ? rel.nota_rel : null) + '</td>' +
+        '<td>' + BC.pillFarol(s.farol, s.score) + '</td>' +
+        '<td class="hide-s nowrap">' + BC.data(C.fimContrato(c)) + (s.renovacao ? ' <span class="tag acc">renovar</span>' : '') + '</td>' +
+        '<td><button class="btn mini" data-act="checkin" data-id="' + esc(c.id) + '">Check-in</button></td></tr>';
+    });
+    out += '</tbody><tfoot><tr><td colspan="2">Total</td><td class="num">' + BC.brl(mrr) + '</td><td class="hide-s"></td><td class="num hide-s">' + BC.brl(soma(x.ativos, function (c) { return C.ltv(c, h); })) + '</td><td colspan="5" class="hide-s"></td></tr></tfoot></table></div>';
+    if (!lista.length) out += '<p class="vazio">Nenhum cliente em atenção. Bom sinal.</p>';
+    out += '<p class="small faint" style="margin-top:12px">LT = meses desde o início. LTV = LT × mensalidade. Curva A/B/C por percentil de mensalidade entre os ativos (A = 20% maiores, B = próximos 30%, C = restante). O farol vem do health score de 0 a 100: verde a partir de 75, amarelo a partir de 50.</p>';
+    return out;
+  };
+  BC.act['toggle-risco'] = function () { BC.ui.filtroRisco = !BC.ui.filtroRisco; BC.render(); };
+  BC.act['abrir-cliente'] = function (el) { location.hash = '#c-' + el.dataset.id; };
+
+  // ───────────── ficha do cliente ─────────────
+  BC.views.cliente = function (id) {
+    var c = S.get('clientes', id);
+    if (!c) return '<p class="vazio">Cliente não encontrado. <a href="#clientes">Voltar para a carteira</a>.</p>';
+    var x = BC.ctx(), h = x.h, perdido = c.status === 'churn';
+    var cks = checkinsDe(x, id), asc = cks.slice().reverse().slice(-10);
+    var fbs = x.feedbacks.filter(function (f) { return f.cliente_id === id; }).sort(function (a, b) { return a.data < b.data ? 1 : (a.data > b.data ? -1 : 0); });
+    var s = perdido ? null : x.saude[id];
+
+    var out = '<a class="voltar" href="#' + (perdido ? 'churn' : 'clientes') + '">← ' + (perdido ? 'Churn' : 'Clientes') + '</a>';
+    out += '<div class="cli-cab"><div style="min-width:0"><h1>' + esc(c.nome) + '</h1>' +
+      '<p class="sub muted" style="margin-top:6px">' + esc([c.segmento, c.contato_nome].filter(Boolean).join(' · ')) +
+      (c.whatsapp && BC.waLink(c.whatsapp) ? ' · <a href="' + esc(BC.waLink(c.whatsapp)) + '" target="_blank" rel="noopener">WhatsApp</a>' : '') +
+      (c.instagram ? ' · <a href="' + esc(BC.igLink(c.instagram)) + '" target="_blank" rel="noopener">@' + esc(c.instagram) + '</a>' : '') + '</p>';
+    if (s) {
+      out += '<div style="margin-top:10px">' + BC.pillFarol(s.farol, s.score) + (s.renovacao ? ' <span class="tag acc">renovação em ' + (s.diasFim < 0 ? 'atraso' : s.diasFim + ' dias') + '</span>' : '') + (s.novo90 ? ' <span class="tag acc">primeiros 90 dias</span>' : '') + '</div>';
+      out += s.motivos.length ? '<ul class="motivos">' + s.motivos.map(function (m) { return '<li>− ' + esc(m.texto) + '</li>'; }).join('') + '</ul>' : '<p class="small muted" style="margin-top:8px">Sem alertas no momento.</p>';
+    }
+    out += '</div><div class="pagehead-acoes">';
+    if (!perdido) out += '<button class="btn primario" data-act="checkin" data-id="' + esc(id) + '">Check-in</button><button class="btn" data-act="novo-feedback" data-id="' + esc(id) + '">+ Feedback</button>';
+    out += '<button class="btn" data-act="editar-cliente" data-id="' + esc(id) + '">Editar</button>';
+    out += perdido ? '<button class="btn" data-act="reverter-churn" data-id="' + esc(id) + '">Reverter churn</button>' : '<button class="btn perigo" data-act="churn" data-id="' + esc(id) + '">Dar churn</button>';
+    out += '</div></div>';
+
+    if (perdido) {
+      out += '<div class="aviso warn" style="flex-direction:column;align-items:flex-start"><div><strong>Cliente perdido em ' + BC.data(c.churn_data) + '.</strong> Motivo: ' + esc(BC.nomeMotivo(c.churn_motivo)) + '.</div>' +
+        (c.churn_aprendizados ? '<div class="small"><strong>O que eu faria diferente:</strong> ' + esc(c.churn_aprendizados) + '</div>' : '') + '</div>';
+    }
+    out += '<div class="faixa">' +
+      '<div><div class="rot">Mensalidade</div><div class="val">' + BC.brl(c.mensalidade) + '</div>' + (perdido ? '' : '<div class="nota">curva ' + x.curva[id] + '</div>') + '</div>' +
+      '<div><div class="rot">LT</div><div class="val">' + BC.n1(C.ltMeses(c, h)) + '<span class="faint" style="font-size:16px"> meses</span></div><div class="nota">desde ' + BC.data(c.inicio) + '</div></div>' +
+      '<div><div class="rot">LTV</div><div class="val">' + BC.brl(C.ltv(c, h)) + '</div>' + (perdido ? '<div class="nota">congelado na saída</div>' : '') + '</div>' +
+      '<div><div class="rot">Contrato</div><div class="val" style="font-size:20px">' + BC.data(C.fimContrato(c)) + '</div><div class="nota">' + (Number(c.duracao_meses) || '—') + ' meses' + (perdido ? '' : ' · ' + BC.rotuloDias(C.diasParaFim(c, h))) + '</div></div>' +
+      '<div><div class="rot">Verba de anúncios</div><div class="val" style="font-size:20px">' + BC.brl(c.verba_mensal) + '</div><div class="nota">por mês, paga pelo cliente</div></div></div>';
+
+    var leadsAsc = asc.filter(function (k) { return k.leads != null; });
+    var relAsc = asc.filter(function (k) { return k.nota_rel != null; });
+    out += '<div class="graficos"><div><div class="graf-tit"><span>Leads por semana</span><span class="faint">' + (c.meta_leads_semana ? 'meta ' + c.meta_leads_semana : 'sem meta definida') + '</span></div>' +
+      BC.graf.barras(leadsAsc.map(function (k) { return Number(k.leads); }), leadsAsc.map(function (k) { return BC.dataCurta(k.semana); }), { meta: c.meta_leads_semana ? Number(c.meta_leads_semana) : 0, unid: ' leads', titulo: 'Leads por semana' }) + '</div>' +
+      '<div><div class="graf-tit"><span>Nota de relacionamento</span><span class="faint">tracejado: 7 e 9</span></div>' +
+      BC.graf.notas(relAsc.map(function (k) { return Number(k.nota_rel); }), relAsc.map(function (k) { return BC.dataCurta(k.semana); })) + '</div></div>';
+
+    out += '<section class="bloco"><div class="bloco-cab"><h2>Check-ins semanais</h2></div>';
+    if (!cks.length) out += '<p class="vazio">Nenhum check-in ainda.' + (perdido ? '' : ' Use o botão “Check-in” acima.') + '</p>';
+    else {
+      out += '<div class="rolagem"><table class="tabela"><thead><tr><th>Semana</th><th class="num">Investido</th><th class="num">Leads</th><th class="num hide-s">CPL</th><th class="num hide-s">Vendas</th><th>Relac.</th><th class="hide-s">Sinais</th><th class="hide-s">Feito → próxima ação</th></tr></thead><tbody>';
+      cks.forEach(function (k) {
+        var cp = C.cpl(k.investimento, k.leads);
+        out += '<tr class="clicavel" data-act="checkin" data-id="' + esc(id) + '" data-semana="' + esc(k.semana) + '"><td class="nowrap">' + BC.dataCurta(k.semana) + '</td>' +
+          '<td class="num">' + (k.investimento != null ? BC.brl(k.investimento) : '—') + '</td><td class="num">' + (k.leads != null ? k.leads : '—') + '</td>' +
+          '<td class="num hide-s">' + (cp != null ? BC.brl2(cp) : '—') + '</td><td class="num hide-s">' + (k.vendas != null ? k.vendas : '—') + '</td>' +
+          '<td>' + BC.pillRel(k.nota_rel) + '</td><td class="hide-s">' + (k.gatilhos && k.gatilhos.length ? '<span class="pill amarelo sem-ponto">' + k.gatilhos.length + '</span>' : '<span class="faint">—</span>') + '</td>' +
+          '<td class="truncar hide-s">' + esc([k.feito, k.proximo].filter(Boolean).join(' → ') || '—') + '</td></tr>';
+      });
+      out += '</tbody></table></div>';
+    }
+    out += '</section>';
+
+    out += '<section class="bloco espaco"><div class="bloco-cab"><h2>Feedbacks</h2>' + (perdido ? '' : '<button class="btn mini" data-act="novo-feedback" data-id="' + esc(id) + '">+ Feedback</button>') + '</div>';
+    if (!fbs.length) out += '<p class="vazio">Nenhum feedback registrado.</p>';
+    else out += '<ul class="linhas">' + fbs.map(function (f) {
+      return '<li><div class="corpo"><div><span class="pill ' + f.tom + '">' + ({ positivo: 'Positivo', neutro: 'Neutro', negativo: 'Negativo' }[f.tom] || f.tom) + '</span> <span class="small muted">' + BC.data(f.data) + (f.canal ? ' · ' + esc({ whatsapp: 'WhatsApp', reuniao: 'Reunião', ligacao: 'Ligação', outro: 'Outro' }[f.canal] || f.canal) : '') + '</span></div><div style="margin-top:4px;overflow-wrap:anywhere">' + esc(f.texto) + '</div></div>' +
+        '<div class="acoes"><button class="btn mini fantasma" data-act="excluir-feedback" data-id="' + esc(f.id) + '" aria-label="Remover feedback">Remover</button></div></li>';
+    }).join('') + '</ul>';
+    out += '</section>';
+    if (c.notas) out += '<section class="bloco espaco"><div class="bloco-cab"><h2>Notas</h2></div><p style="white-space:pre-wrap;overflow-wrap:anywhere">' + esc(c.notas) + '</p></section>';
+    return out;
+  };
+
+  // ───────────── churn ─────────────
+  BC.views.churn = function () {
+    var x = BC.ctx(), h = x.h, e = C.estatChurn(x.clientes, h);
+    var comBase = e.meses.filter(function (m) { return m.churnPct != null; });
+    var churnMedio = comBase.length ? comBase.reduce(function (s, m) { return s + m.churnPct; }, 0) / comBase.length : null;
+    var motivos = Object.keys(e.porMotivo).map(function (k) { return [k, e.porMotivo[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
+    var out = '<div class="pagehead"><div><h1>Churn</h1><p class="sub">O padrão dos motivos importa mais que cada saída isolada.</p></div></div>' + bannerExemplos();
+    if (!e.perdidos.length) return out + '<p class="vazio">Nenhum cliente perdido registrado. Quando alguém sair, use “Dar churn” na ficha do cliente.</p>';
+    out += '<div class="faixa">' +
+      '<div><div class="rot">Clientes perdidos</div><div class="val">' + e.perdidos.length + '</div><div class="nota">MRR perdido ' + BC.brl(soma(e.perdidos, function (c) { return c.mensalidade; })) + '</div></div>' +
+      '<div><div class="rot">Churn mensal médio</div><div class="val">' + (churnMedio == null ? '—' : BC.n1(churnMedio) + '%') + '</div><div class="nota">últimos 12 meses</div></div>' +
+      '<div><div class="rot">LT médio dos perdidos</div><div class="val">' + BC.n1(e.ltMedio) + '<span class="faint" style="font-size:16px"> meses</span></div></div>' +
+      '<div><div class="rot">LTV médio dos perdidos</div><div class="val">' + BC.brl(e.ltvMedio) + '</div></div></div>';
+    var maxM = motivos.length ? motivos[0][1] : 1;
+    out += '<div class="colunas"><section class="bloco"><div class="bloco-cab"><h2>Motivos de saída</h2></div><div class="barras">' + motivos.map(function (m) {
+      return '<div class="barra"><span>' + esc(BC.nomeMotivo(m[0])) + '</span><div class="trilho"><i style="width:' + (m[1] / maxM * 100) + '%"></i></div><span class="v">' + m[1] + ' (' + Math.round(m[1] / e.perdidos.length * 100) + '%)</span></div>';
+    }).join('') + '</div><p class="small muted" style="margin-top:10px">Mais frequente: <strong>' + esc(BC.nomeMotivo(motivos[0][0])) + '</strong>.</p></section>';
+    var meses = e.meses.filter(function (m) { return m.saidas > 0 || m.mes >= C.addMesesMes(h, -5); });
+    out += '<section class="bloco"><div class="bloco-cab"><h2>Ao longo do tempo</h2></div><div class="rolagem"><table class="tabela"><thead><tr><th>Mês</th><th class="num">Saídas</th><th class="num">Churn</th><th class="num hide-s">LT médio</th><th class="num hide-s">LTV médio</th></tr></thead><tbody>' +
+      meses.map(function (m) {
+        return '<tr><td>' + BC.mes(m.mes) + '</td><td class="num">' + m.saidas + '</td><td class="num">' + (m.churnPct == null ? '—' : BC.n1(m.churnPct) + '%') + '</td><td class="num hide-s">' + (m.ltMedio == null ? '—' : BC.n1(m.ltMedio) + ' m') + '</td><td class="num hide-s">' + (m.ltvMedio == null ? '—' : BC.brl(m.ltvMedio)) + '</td></tr>';
+      }).join('') + '</tbody></table></div></section></div>';
+    out += '<section class="bloco espaco"><div class="bloco-cab"><h2>Clientes perdidos</h2></div><div class="rolagem"><table class="tabela"><thead><tr><th>Cliente</th><th>Motivo</th><th>Saída</th><th class="num hide-s">LT</th><th class="num hide-s">LTV</th><th class="hide-s">O que eu faria diferente</th></tr></thead><tbody>' +
+      e.perdidos.sort(function (a, b) { return a.churn_data < b.churn_data ? 1 : -1; }).map(function (c) {
+        return '<tr class="clicavel" data-act="abrir-cliente" data-id="' + esc(c.id) + '"><td class="nome">' + esc(c.nome) + '</td><td>' + esc(BC.nomeMotivo(c.churn_motivo)) + '</td><td class="nowrap">' + BC.data(c.churn_data) + '</td>' +
+          '<td class="num hide-s">' + BC.n1(C.ltMeses(c, h)) + ' m</td><td class="num hide-s">' + BC.brl(C.ltv(c, h)) + '</td><td class="hide-s" style="max-width:340px;overflow-wrap:anywhere">' + esc(c.churn_aprendizados || '—') + '</td></tr>';
+      }).join('') + '</tbody></table></div></section>';
+    return out;
+  };
+
+  // ───────────── previsão de MRR ─────────────
+  function premissas(ativos) {
+    var pr = Object.assign({}, C.PROB_RENOVACAO_PADRAO, S.cfg('prob_renovacao', {}));
+    var pe = Object.assign({}, C.PROB_ETAPA_PADRAO, S.cfg('prob_etapa', {}));
+    var ticket = Number(S.cfg('ticket_padrao', 0)) || (ativos.length ? soma(ativos, function (c) { return c.mensalidade; }) / ativos.length : 0);
+    return { renov: pr, etapa: pe, ticket: ticket, ticketManual: Number(S.cfg('ticket_padrao', 0)) || 0 };
+  }
+  BC.views.previsao = function () {
+    var x = BC.ctx(), h = x.h, pm = premissas(x.ativos);
+    var farois = {}; x.ativos.forEach(function (c) { farois[c.id] = x.saude[c.id].farol; });
+    var prev = C.previsaoMrr(x.clientes, farois, pm.renov, h, 6);
+    var hist = C.historicoMrr(x.clientes, h, 6);
+    var pipe = C.pipelinePonderado(S.all('prospects'), pm.etapa, pm.ticket);
+    var conc = C.concentracao(x.ativos);
+    var mrr = soma(x.ativos, function (c) { return c.mensalidade; });
+    var out = '<div class="pagehead"><div><h1>Previsão de MRR</h1><p class="sub">Próximos 6 meses a partir dos contratos, do farol de cada cliente e do pipeline.</p></div></div>' + bannerExemplos();
+    if (!x.ativos.length) return out + '<p class="vazio">Cadastre clientes com contrato para ver a previsão.</p>';
+    var m3 = prev[3] || prev[prev.length - 1];
+    out += '<div class="faixa">' +
+      '<div><div class="rot">MRR hoje</div><div class="val">' + BC.brl(mrr) + '</div><div class="nota">' + x.ativos.length + ' contratos ativos</div></div>' +
+      '<div><div class="rot">Contratado em ' + BC.mes(m3.mes) + '</div><div class="val">' + BC.brl(m3.contratado) + '</div><div class="nota">só contratos vigentes</div></div>' +
+      '<div><div class="rot">Esperado em ' + BC.mes(m3.mes) + '</div><div class="val">' + BC.brl(m3.esperado) + '</div><div class="nota">com renovações prováveis</div></div>' +
+      '<div><div class="rot">Pipeline ponderado</div><div class="val">' + BC.brl(pipe.mrr) + '</div><div class="nota">' + pipe.n + ' contatos em aberto</div></div>' +
+      '<div><div class="rot">Concentração</div><div class="val">' + BC.pct(conc.top1) + '</div><div class="nota">maior cliente · top 3 = ' + BC.pct(conc.top3) + '</div></div></div>';
+    out += '<section class="bloco"><div class="bloco-cab"><h2>MRR: histórico e previsão</h2></div>' + BC.graf.mrr(hist, prev) + '</section>';
+
+    out += '<div class="colunas espaco"><section class="bloco"><div class="bloco-cab"><h2>Mês a mês</h2></div><div class="rolagem"><table class="tabela"><thead><tr><th>Mês</th><th class="num">Contratado</th><th class="num">Esperado</th><th class="num">+ pipeline</th></tr></thead><tbody>' +
+      prev.map(function (p, i) {
+        return '<tr><td>' + BC.mes(p.mes) + (i === 0 ? ' <span class="faint small">(atual)</span>' : '') + '</td><td class="num">' + BC.brl(p.contratado) + '</td><td class="num">' + BC.brl(p.esperado) + '</td><td class="num">' + BC.brl(p.esperado + (i >= 2 ? pipe.mrr : 0)) + '</td></tr>';
+      }).join('') + '</tbody></table></div><p class="small faint" style="margin-top:8px">“+ pipeline” soma o novo MRR esperado do CRM a partir do segundo mês, supondo fechamento em até 60 dias.</p></section>';
+
+    var movim = hist.slice().reverse();
+    out += '<section class="bloco"><div class="bloco-cab"><h2>Movimento do MRR</h2></div><div class="rolagem"><table class="tabela"><thead><tr><th>Mês</th><th class="num">MRR</th><th class="num">Novo</th><th class="num">Perdido</th></tr></thead><tbody>' +
+      movim.map(function (m) { return '<tr><td>' + BC.mes(m.mes) + '</td><td class="num">' + BC.brl(m.mrr) + '</td><td class="num">' + (m.novo ? '+' + BC.brl(m.novo) : '—') + '</td><td class="num">' + (m.perdido ? '−' + BC.brl(m.perdido) : '—') + '</td></tr>'; }).join('') +
+      '</tbody></table></div><p class="small faint" style="margin-top:8px">Assume a mensalidade atual em todo o período (a ferramenta não guarda reajustes).</p></section></div>';
+
+    var ate = C.addMeses(h, 6);
+    var renov = x.ativos.filter(function (c) { return C.fimContrato(c) <= ate; }).sort(function (a, b) { return C.fimContrato(a) < C.fimContrato(b) ? -1 : 1; });
+    out += '<section class="bloco espaco"><div class="bloco-cab"><h2>Renovações nos próximos 6 meses</h2></div>';
+    if (!renov.length) out += '<p class="vazio">Nenhum contrato vence neste período.</p>';
+    else out += '<div class="rolagem"><table class="tabela"><thead><tr><th>Cliente</th><th>Termina</th><th>Farol</th><th class="num">Chance de renovar</th><th class="num">Mensalidade</th><th class="num">Valor esperado</th></tr></thead><tbody>' +
+      renov.map(function (c) {
+        var f = farois[c.id], p = pm.renov[f];
+        return '<tr class="clicavel" data-act="abrir-cliente" data-id="' + esc(c.id) + '"><td class="nome">' + esc(c.nome) + '</td><td class="nowrap">' + BC.data(C.fimContrato(c)) + '</td><td>' + BC.pillFarol(f) + '</td><td class="num">' + BC.pct(p) + '</td><td class="num">' + BC.brl(c.mensalidade) + '</td><td class="num">' + BC.brl(c.mensalidade * p) + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+    out += '</section>';
+
+    out += '<section class="bloco espaco"><div class="bloco-cab"><h2>Premissas</h2></div><p class="small muted" style="margin-bottom:10px">São estimativas suas, não dados. Ajuste conforme o seu histórico real de renovação e de fechamento.</p>' +
+      '<form data-form="premissas"><div class="grade">' +
+      ['verde', 'amarelo', 'vermelho'].map(function (f) { return '<div class="campo"><label for="pm-r-' + f + '">Chance de renovar · farol ' + f + ' (%)</label><input id="pm-r-' + f + '" name="r_' + f + '" type="number" min="0" max="100" step="1" value="' + Math.round(pm.renov[f] * 100) + '"></div>'; }).join('') +
+      '</div><div class="grade" style="margin-top:12px">' +
+      [['abordado', 'Abordado'], ['respondeu', 'Respondeu'], ['diagnostico', 'Mini-diagnóstico'], ['reuniao', 'Reunião'], ['proposta', 'Proposta']].map(function (e) { return '<div class="campo"><label for="pm-e-' + e[0] + '">Fechar · etapa ' + e[1] + ' (%)</label><input id="pm-e-' + e[0] + '" name="e_' + e[0] + '" type="number" min="0" max="100" step="0.5" value="' + (Math.round(pm.etapa[e[0]] * 1000) / 10) + '"></div>'; }).join('') +
+      '<div class="campo"><label for="pm-ticket">Ticket de um cliente novo (R$)</label><input id="pm-ticket" name="ticket" type="number" min="0" step="any" value="' + (pm.ticketManual || '') + '" placeholder="' + Math.round(pm.ticket) + '"><small>Em branco: usa o ticket médio atual.</small></div></div>' +
+      '<p class="erro-form" hidden role="alert"></p><div style="margin-top:12px"><button class="btn primario" type="submit">Salvar premissas</button></div></form></section>';
+    out += '<p class="small faint" style="margin-top:14px">Concentração: quando poucos clientes respondem pela maior parte do MRR, a receita é frágil. Com poucos clientes isso é natural no começo; acompanhe se cai conforme a carteira cresce.</p>';
+    return out;
+  };
+  BC.forms.premissas = function (form) {
+    var d = BC.dados(form), pr = {}, pe = {};
+    ['verde', 'amarelo', 'vermelho'].forEach(function (f) { pr[f] = Math.min(1, Math.max(0, (Number(d['r_' + f]) || 0) / 100)); });
+    ['abordado', 'respondeu', 'diagnostico', 'reuniao', 'proposta'].forEach(function (e) { pe[e] = Math.min(1, Math.max(0, (Number(d['e_' + e]) || 0) / 100)); });
+    BC.seguro(async function () {
+      await S.setCfg('prob_renovacao', pr); await S.setCfg('prob_etapa', pe); await S.setCfg('ticket_padrao', BC.num(d.ticket) || 0);
+      BC.toast('Premissas salvas.');
+    }, form);
+  };
+
+  // ───────────── dados e backup ─────────────
+  BC.views.dados = function () {
+    var out = '<div class="pagehead"><div><h1>Dados</h1><p class="sub">Backup, exemplos e preferências.</p></div></div>' + bannerArmazenamento() + bannerExemplos();
+    out += '<div class="colunas"><section class="bloco"><div class="bloco-cab"><h2>Onde ficam os dados</h2></div>' +
+      (S.modo() === 'supabase' ? '<p>Seus dados estão no <strong>Supabase</strong>, protegidos por login.</p>' : '<p>Os dados estão neste navegador (<strong>modo local</strong>). Trocar de navegador ou limpar os dados do site apaga tudo. Na etapa seguinte a ferramenta passa a gravar no Supabase.</p>') +
+      '<p class="small muted" style="margin-top:8px">Os exemplos não entram no backup.</p></section>' +
+      '<section class="bloco"><div class="bloco-cab"><h2>Backup</h2></div><div class="pagehead-acoes"><button class="btn" data-act="exportar">Baixar backup (.json)</button><button class="btn" data-act="copiar-backup">Copiar backup</button></div>' +
+      '<div class="campo" style="margin-top:14px"><label for="arq-backup">Restaurar de um arquivo</label><input id="arq-backup" type="file" accept=".json,application/json" data-change="arquivo-backup"></div>' +
+      '<p class="small muted" style="margin-top:6px">A restauração soma os registros do arquivo aos que já existem (ids repetidos são ignorados).</p><p class="erro-form" id="erro-backup" hidden role="alert"></p></section>' +
+      '<section class="bloco"><div class="bloco-cab"><h2>Exemplos</h2></div><p class="muted">Clientes e contatos fictícios para ver as telas funcionando.</p><div class="pagehead-acoes" style="margin-top:10px">' +
+      '<button class="btn" data-act="carregar-exemplos"' + (S.temExemplos() ? ' disabled' : '') + '>Carregar exemplos</button><button class="btn" data-act="limpar-exemplos"' + (S.temExemplos() ? '' : ' disabled') + '>Limpar exemplos</button></div></section>' +
+      '<section class="bloco"><div class="bloco-cab"><h2>Preferências</h2></div><form data-form="preferencias"><div class="campo"><label for="pf-meta">Meta diária de toques na prospecção</label><input id="pf-meta" name="meta" type="number" min="1" step="1" value="' + (Number(S.cfg('meta_diaria', 5)) || 5) + '"></div><p class="erro-form" hidden role="alert"></p><div style="margin-top:12px"><button class="btn primario" type="submit">Salvar</button></div></form></section></div>';
+    return out;
+  };
+  BC.forms.preferencias = function (form) {
+    var d = BC.dados(form);
+    BC.seguro(async function () { await S.setCfg('meta_diaria', Math.max(1, Math.round(Number(d.meta) || 5))); BC.toast('Preferências salvas.'); }, form);
+  };
+  BC.act['exportar'] = function () {
+    var json = JSON.stringify(S.exportar(), null, 2);
+    try {
+      var url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+      var a = document.createElement('a'); a.href = url; a.download = 'agencia-bc-backup-' + C.hoje() + '.json';
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+      BC.toast('Backup gerado. Se nada baixou, use “Copiar backup”.');
+    } catch (e) { BC.toast('Não foi possível baixar. Use “Copiar backup”.', true); }
+  };
+  BC.act['copiar-backup'] = function () {
+    var json = JSON.stringify(S.exportar());
+    var ok = function () { BC.toast('Backup copiado. Cole em um arquivo .json e guarde.'); };
+    var falha = function () {
+      var d = BC.dialogo('<div class="dlg">' + BC.cabDialogo('Backup', 'Selecione tudo e copie.') + '<textarea id="bk" style="min-height:240px" readonly>' + esc(json) + '</textarea></div>');
+      var t = d.querySelector('textarea'); t.focus(); t.select();
+    };
+    try { navigator.clipboard.writeText(json).then(ok, falha); } catch (e) { falha(); }
+  };
+  BC.act['arquivo-backup'] = function (el) {
+    var f = el.files && el.files[0]; if (!f) return;
+    var err = document.getElementById('erro-backup');
+    var r = new FileReader();
+    r.onload = function () {
+      BC.seguro(async function () {
+        await S.importar(JSON.parse(r.result), false);
+        if (err) err.hidden = true;
+        BC.toast('Backup restaurado.');
+      }).then(function () { el.value = ''; });
+    };
+    r.onerror = function () { BC.toast('Não consegui ler o arquivo.', true); };
+    r.readAsText(f);
+  };
+  BC.act['limpar-exemplos'] = function () { BC.seguro(async function () { await S.limparExemplos(); BC.toast('Exemplos removidos.'); }); };
+  BC.act['carregar-exemplos'] = function () {
+    BC.seguro(async function () { await S.carregarExemplos(root.BCSeed.gerar(C.hoje())); BC.toast('Exemplos carregados.'); });
+  };
+})(window);
+
+</script>
+<script>
+/* Agência BC · tela de prospecção (CRM): indicadores, "Pra hoje", novo contato, quadro, lista e funil. */
+(function (root) {
+  'use strict';
+  var C = root.BCCalc, S = root.BCStore, BC = root.BC, esc = BC.esc;
+  var ORIGEM_NOME = { lista: 'Lista', meta_ads: 'Meta Ads', indicacao: 'Indicação', outro: 'Outro' };
+  var CANAIS = [['whatsapp', 'WhatsApp'], ['instagram', 'Instagram DM'], ['email', 'E-mail'], ['ligacao', 'Ligação'], ['linkedin', 'LinkedIn'], ['presencial', 'Presencial']];
+
+  function aberto(p) { return p.etapa !== 'fechado' && p.etapa !== 'perdido'; }
+  function titulo(p) { return p.nome || p.negocio || 'Sem nome'; }
+  function sub(p) {
+    var a = [];
+    if (p.negocio && p.negocio !== p.nome) a.push(p.negocio);
+    if (p.nicho && p.nicho !== p.negocio) a.push(p.nicho);
+    if (p.cidade) a.push(p.cidade);
+    return a.join(' · ');
+  }
+  function digitos(t) { return String(t || '').replace(/\D/g, ''); }
+
+  // ícones de contato: W (WhatsApp), @ (e-mail), IG (Instagram), telefone
+  BC.iconesContato = function (p) {
+    var wa = BC.waLink(p.telefone), ig = BC.igLink(p.instagram), d = digitos(p.telefone);
+    function ico(href, txt, rot, extra) {
+      return href ? '<a class="ico-c" href="' + esc(href) + '" target="_blank" rel="noopener" title="' + rot + '" aria-label="' + rot + '">' + txt + '</a>'
+        : '<span class="ico-c off" title="' + rot + ': não informado" aria-label="' + rot + ' não informado">' + txt + '</span>';
+    }
+    return '<span class="ico-linha">' +
+      ico(wa, 'W', 'WhatsApp') +
+      ico(p.email ? 'mailto:' + p.email : '', '@', 'E-mail') +
+      ico(ig, 'IG', 'Instagram') +
+      ico(d ? 'tel:+' + d : '', '&#9742;', 'Ligar') + '</span>';
+  };
+
+  function quando(p, h) {
+    if (!p.proxima_data) return '';
+    var d = C.diffDias(h, p.proxima_data);
+    if (d < 0) return '<span class="chip atrasado">atrasado · ' + BC.rotuloDias(d) + '</span>';
+    if (d === 0) return '<span class="chip hoje">é hoje</span>';
+    return '<span class="chip">' + BC.dataCurta(p.proxima_data) + '</span>';
+  }
+
+  // ───────── cartão do quadro ─────────
+  function cartao(p, h) {
+    var prox = C.ORDEM_FUNIL[C.ORDEM_FUNIL.indexOf(p.etapa) + 1];
+    return '<div class="cartao" data-act="abrir-prospect" data-id="' + esc(p.id) + '" tabindex="0">' +
+      '<div class="t">' + esc(titulo(p)) + '</div>' +
+      (sub(p) ? '<div class="d">' + esc(sub(p)) + '</div>' : '') +
+      '<div class="linha">' + quando(p, h) + (p.origem === 'meta_ads' ? '<span class="chip acc">Meta Ads</span>' : '') + (p.toques ? '<span class="chip">' + p.toques + (p.toques === 1 ? ' toque' : ' toques') + '</span>' : '') + '</div>' +
+      '<div class="linha">' + BC.iconesContato(p) + '</div>' +
+      (prox ? '<div class="linha"><button type="button" class="btn-av" data-act="avancar" data-id="' + esc(p.id) + '">' + (prox === 'fechado' ? 'fechar cliente' : 'avançar') + ' &rarr;</button></div>' : '') +
+      '</div>';
+  }
+  function filtrar(todos) {
+    var u = BC.ui, q = C.semAcento(u.pBusca || '').trim();
+    return todos.filter(function (p) {
+      if (u.pEtapa && p.etapa !== u.pEtapa) return false;
+      if (u.pOrigem && p.canal !== u.pOrigem) return false; // pOrigem guarda o canal
+      if (q && C.semAcento([p.nome, p.negocio, p.nicho, p.cidade, p.telefone, p.instagram, p.email].join(' ')).indexOf(q) < 0) return false;
+      return true;
+    });
+  }
+  function quadro(h, todos) {
+    var out = '<div class="quadro">';
+    C.ORDEM_FUNIL.forEach(function (et) {
+      var col = todos.filter(function (p) { return p.etapa === et; });
+      col.sort(function (a, b) { return (a.proxima_data || '9999') < (b.proxima_data || '9999') ? -1 : 1; });
+      out += '<div class="col"><div class="col-cab">' + esc(BC.nomeEtapa(et)) + '<span>' + col.length + '</span></div>';
+      col.slice(0, 40).forEach(function (p) { out += cartao(p, h); });
+      if (col.length > 40) out += '<p class="small muted" style="padding:4px 6px">+ ' + (col.length - 40) + ' na vista Lista</p>';
+      if (!col.length) out += '<p class="small faint" style="padding:6px 4px">vazio</p>';
+      out += '</div>';
+    });
+    return out + '</div>';
+  }
+  function lista(h, todos) {
+    if (!todos.length) return '<p class="vazio">Nenhum contato com esses filtros.</p>';
+    todos = todos.slice().sort(function (a, b) { return (b.atualizado_em || b.created_at || '') < (a.atualizado_em || a.created_at || '') ? -1 : 1; });
+    return '<div class="rolagem"><table class="tabela"><thead><tr><th>Contato</th><th class="hide-s">Telefone</th><th class="hide-s">Origem</th><th>Etapa</th><th>Próxima etapa</th><th class="num hide-s">Toques</th></tr></thead><tbody>' +
+      todos.slice(0, 300).map(function (p) {
+        return '<tr class="clicavel" data-act="abrir-prospect" data-id="' + esc(p.id) + '"><td><div class="nome">' + esc(titulo(p)) + '</div><div class="small faint">' + esc(sub(p)) + '</div></td>' +
+          '<td class="hide-s nowrap mono small">' + esc(p.telefone || '—') + '</td><td class="hide-s">' + esc(ORIGEM_NOME[p.origem] || p.origem) + '</td>' +
+          '<td><span class="tag">' + esc(BC.nomeEtapa(p.etapa)) + '</span></td><td>' + (quando(p, h) || '<span class="faint">—</span>') + (p.proxima_acao ? ' <span class="small muted">' + esc(p.proxima_acao) + '</span>' : '') + '</td><td class="num hide-s">' + (p.toques || 0) + '</td></tr>';
+      }).join('') + '</tbody></table></div><p class="small faint" style="margin-top:6px">' + todos.length + ' contatos.</p>';
+  }
+
+  // ───────── funil ─────────
+  function funilHTML(todos) {
+    if (!todos.length) return '<p class="vazio">Sem contatos ainda.</p>';
+    var f = C.funil(todos), total = f[0].n || 1;
+    var out = '<div class="colunas"><section class="bloco"><div class="bloco-cab"><h2>Funil</h2></div><div class="barras">' + f.map(function (e, i) {
+      return '<div class="barra"><span>' + esc(e.nome) + '</span><div class="trilho"><i style="width:' + (e.n / total * 100) + '%"></i></div><span class="v">' + e.n + (i > 0 && e.deAnterior != null ? ' · ' + BC.pct(e.deAnterior) : '') + '</span></div>';
+    }).join('') + '</div><p class="small faint" style="margin-top:10px">A porcentagem é sobre a etapa anterior. Conta quem já passou por cada etapa, inclusive os perdidos depois.</p></section>';
+    out += '<section class="bloco"><div class="bloco-cab"><h2>Por origem</h2></div><div class="rolagem"><table class="tabela"><thead><tr><th>Origem</th><th class="num">Contatos</th><th class="num">Responderam</th><th class="num">Fechados</th><th class="num">Conversão</th></tr></thead><tbody>' +
+      Object.keys(ORIGEM_NOME).map(function (o) {
+        var ps = todos.filter(function (p) { return p.origem === o; }); if (!ps.length) return '';
+        var ff = C.funil(ps);
+        return '<tr><td>' + ORIGEM_NOME[o] + '</td><td class="num">' + ps.length + '</td><td class="num">' + ff[2].n + '</td><td class="num">' + ff[6].n + '</td><td class="num">' + BC.pct(ps.length ? ff[6].n / ps.length : null, 1) + '</td></tr>';
+      }).join('') + '</tbody></table></div></section></div>';
+    var perdidos = todos.filter(function (p) { return p.etapa === 'perdido'; }), pm = {};
+    perdidos.forEach(function (p) { var k = p.motivo_perda || 'Sem motivo'; pm[k] = (pm[k] || 0) + 1; });
+    if (perdidos.length) {
+      var ks = Object.keys(pm).sort(function (a, b) { return pm[b] - pm[a]; }), mx = pm[ks[0]];
+      out += '<section class="bloco espaco"><div class="bloco-cab"><h2>Motivos de perda</h2></div><div class="barras">' + ks.map(function (k) {
+        return '<div class="barra"><span>' + esc(k) + '</span><div class="trilho"><i style="width:' + (pm[k] / mx * 100) + '%"></i></div><span class="v">' + pm[k] + '</span></div>';
+      }).join('') + '</div></section>';
+    }
+    return out;
+  }
+
+  // ───────── novo contato (inline) ─────────
+  function formNovo() {
+    var o = CANAIS.map(function (c) { return '<option value="' + c[0] + '">' + c[1] + '</option>'; }).join('');
+    return '<form class="novo-contato" data-form="prospect" data-id="" id="form-novo" autocomplete="off">' +
+      '<div class="nc-cab"><span class="nc-mais">+</span><div><h3>NOVO CONTATO</h3><p class="small muted">Só o nome já basta pra começar. O resto você completa depois, na ficha.</p></div></div>' +
+      '<div class="nc-grade">' +
+      '<div class="campo"><label for="nc-nome">Nome do contato</label><input id="nc-nome" name="nome" type="text" placeholder="Ex: Rafael Souza" required></div>' +
+      '<div class="campo"><label for="nc-negocio">Negócio / nicho</label><input id="nc-negocio" name="negocio" type="text" placeholder="Ex: Barbearia Imperial, estética"></div>' +
+      '<div class="campo"><label for="nc-tel">Telefone / WhatsApp</label><input id="nc-tel" name="telefone" type="tel" inputmode="tel" placeholder="Ex: (19) 99999-8888"></div>' +
+      '<div class="campo"><label for="nc-email">E-mail</label><input id="nc-email" name="email" type="email" placeholder="Ex: rafael@barbearia.com"></div>' +
+      '<div class="campo"><label for="nc-ig">@ do Instagram</label><input id="nc-ig" name="instagram" type="text" placeholder="Ex: @barbeariaimperial"></div>' +
+      '<div class="campo"><label for="nc-canal">Canal do primeiro toque</label><select id="nc-canal" name="canal">' + o + '</select></div>' +
+      '<div class="campo"><label for="nc-prox">Próxima etapa</label><input id="nc-prox" name="proxima_data" type="date" value="' + C.hoje() + '"></div></div>' +
+      '<input type="hidden" name="etapa" value="novo"><input type="hidden" name="origem" value="lista">' +
+      '<p class="erro-form" hidden role="alert"></p>' +
+      '<div class="nc-rodape"><button type="button" class="btn" data-act="cancelar-novo">Cancelar</button><button type="submit" class="btn primario">Adicionar contato</button></div></form>';
+  }
+
+  BC.views.prospeccao = function () {
+    var h = C.hoje(), todos = S.all('prospects'), u = BC.ui;
+    var meta = Number(S.cfg('meta_diaria', 5)) || 5;
+    var datas = S.all('atividades').filter(function (a) { return a.tipo === 'toque'; }).map(function (a) { return C.dataLocalDe(a.created_at); });
+    var sq = C.sequencia(datas, meta, h);
+    var abertos = todos.filter(aberto);
+    var leads = abertos.filter(function (p) { return p.origem === 'meta_ads' && p.etapa === 'novo'; });
+    var devidos = abertos.filter(function (p) { return p.proxima_data && p.proxima_data <= h && leads.indexOf(p) < 0; })
+      .sort(function (a, b) { return a.proxima_data < b.proxima_data ? -1 : 1; });
+    var pendentes = leads.concat(devidos);
+    var f = C.funil(todos);
+    function taxa(a, b) { return b ? BC.pct(a / b, 0) : '—'; }
+    var kpis = [
+      ['Etapas pra hoje', pendentes.length, true], ['No painel', abertos.length], ['Em cadência', abertos.filter(function (p) { return p.etapa === 'abordado'; }).length],
+      ['Taxa de resposta', taxa(f[2].n, f[1].n)], ['Resposta → reunião', taxa(f[4].n, f[2].n)], ['Reunião → cliente', taxa(f[6].n, f[4].n)], ['Fechados', todos.filter(function (p) { return p.etapa === 'fechado'; }).length]
+    ];
+
+    var out = '<div class="pros-topo"><span class="pill-marca">CRM</span>' +
+      '<div class="pros-meta"><span title="Dias úteis seguidos batendo a meta"><i class="losango"></i>' + sq.streak + (sq.streak === 1 ? ' dia' : ' dias') + '</span>' +
+      '<label>Meta/dia <input type="number" min="1" max="200" value="' + meta + '" data-change="meta-dia" aria-label="Meta de toques por dia"></label>' +
+      '<span>hoje: ' + sq.hoje + '/' + meta + '</span></div></div>';
+    out += '<div class="kpis">' + kpis.map(function (k) { return '<div class="kpi' + (k[2] ? ' dest' : '') + '"><div class="rot">' + k[0] + '</div><div class="val">' + k[1] + '</div></div>'; }).join('') + '</div>';
+
+    // Pra hoje
+    out += '<section class="pra-hoje"><div class="ph-cab"><span>Pra hoje · o painel que te cobra</span><span>' + pendentes.length + '</span></div><div class="ph-corpo">';
+    if (!pendentes.length) {
+      var falta = Math.max(0, meta - sq.hoje);
+      out += '<p class="ph-ok"><strong>&#10003; Nenhuma etapa pendente.</strong> ' + (falta ? 'Agora é abrir conversa nova: faltam ' + falta + ' pra bater a meta de hoje.' : 'Meta de hoje batida.') + '</p>';
+    } else {
+      out += '<ul class="linhas">' + pendentes.map(function (p) {
+        var wa = BC.waLink(p.telefone);
+        return '<li><div class="corpo"><div class="tit">' + esc(titulo(p)) + ' <span class="tag">' + esc(BC.nomeEtapa(p.etapa)) + '</span>' + (p.origem === 'meta_ads' ? ' <span class="chip acc">Meta Ads</span>' : '') + '</div>' +
+          '<div class="det">' + esc(sub(p)) + (sub(p) ? ' · ' : '') + esc(p.proxima_acao || (p.origem === 'meta_ads' ? 'Responder o lead' : 'Follow-up')) + ' ' + quando(p, h) +
+          (p.abordagem ? '' : ' <span class="tag">sem abordagem</span>') + (p.diagnostico ? '' : ' <span class="tag">sem mini-diagnóstico</span>') + '</div></div>' +
+          '<div class="acoes">' + (wa ? '<a class="btn mini" href="' + esc(wa) + '" target="_blank" rel="noopener">WhatsApp</a>' : '') +
+          '<button class="btn mini primario" data-act="toque" data-id="' + esc(p.id) + '">Toque</button>' +
+          (p.etapa === 'abordado' || p.etapa === 'novo' ? '<button class="btn mini" data-act="respondeu" data-id="' + esc(p.id) + '">Respondeu</button>' : '') +
+          '<button class="btn mini fantasma" data-act="abrir-prospect" data-id="' + esc(p.id) + '">Abrir</button></div></li>';
+      }).join('') + '</ul>';
+    }
+    out += '</div></section>';
+
+    // barra de ferramentas
+    out += '<div class="barra-fer"><button class="btn primario" data-act="novo-prospect">+ Novo contato</button>' +
+      '<input type="search" id="busca-pros" placeholder="Buscar nome, negócio, cidade…" value="' + esc(u.pBusca) + '" data-input="busca-pros" aria-label="Buscar contatos">' +
+      '<select data-change="filtro-pros" data-filtro="pEtapa" aria-label="Etapa"><option value="">Todas as etapas</option>' + C.ETAPAS.map(function (e) { return '<option value="' + e.id + '"' + (u.pEtapa === e.id ? ' selected' : '') + '>' + esc(e.nome) + '</option>'; }).join('') + '</select>' +
+      '<select data-change="filtro-pros" data-filtro="pOrigem" aria-label="Canal"><option value="">Todos os canais</option>' + CANAIS.map(function (c) { return '<option value="' + c[0] + '"' + (u.pOrigem === c[0] ? ' selected' : '') + '>' + c[1] + '</option>'; }).join('') + '</select>' +
+      '<span class="seg" role="radiogroup" aria-label="Vista">' + [['quadro', 'Quadro'], ['lista', 'Lista'], ['funil', 'Funil']].map(function (v) {
+        return '<label><input type="radio" name="vista" value="' + v[0] + '"' + (u.pVista === v[0] ? ' checked' : '') + ' data-change="pros-vista"><span style="width:auto;padding:0 14px;font-family:var(--f-body);font-weight:700">' + v[1] + '</span></label>';
+      }).join('') + '</span>' +
+      '<span class="barra-fer-fim"><button class="btn" data-act="importar">Importar planilha</button><button class="btn" data-act="exportar-csv">Exportar CSV</button>' +
+      (S.temExemplos() ? '<button class="btn fantasma" data-act="limpar-exemplos">Limpar exemplos</button>' : '<button class="btn fantasma" data-act="carregar-exemplos">Exemplo</button>') + '</span></div>';
+
+    if (u.novoAberto) out += formNovo();
+
+    if (!todos.length) return out + '<div class="vazio"><p><strong>Nenhum contato ainda.</strong></p><p style="margin-top:6px">Comece cadastrando 20 contatos do mesmo nicho (um nicho por lote deixa o script específico e a taxa de resposta sobe), ou importe sua planilha. Os leads do tráfego pago também caem aqui.</p></div>';
+    var vis = filtrar(todos);
+    out += '<div id="vista-pros">' + (u.pVista === 'lista' ? lista(h, vis) : u.pVista === 'funil' ? funilHTML(todos) : quadro(h, vis)) + '</div>';
+    return out;
+  };
+
+  BC.act['pros-vista'] = function (el) { BC.ui.pVista = el.value; BC.render(); };
+  BC.act['filtro-pros'] = function (el) { BC.ui[el.dataset.filtro] = el.value; BC.render(); };
+  BC.act['busca-pros'] = function (el) {
+    BC.ui.pBusca = el.value;
+    var alvo = document.getElementById('vista-pros'); if (!alvo) return;
+    var vis = filtrar(S.all('prospects')), h = C.hoje();
+    alvo.innerHTML = BC.ui.pVista === 'lista' ? lista(h, vis) : (BC.ui.pVista === 'funil' ? alvo.innerHTML : quadro(h, vis));
+  };
+  BC.act['meta-dia'] = function (el) {
+    var n = Math.max(1, Math.min(200, parseInt(el.value, 10) || 5));
+    S.setCfg('meta_diaria', n);
+  };
+  BC.act['novo-prospect'] = function () {
+    BC.ui.novoAberto = !BC.ui.novoAberto;
+    if (location.hash !== '#prospeccao') { location.hash = '#prospeccao'; return; }
+    BC.render();
+    var f = document.getElementById('form-novo');
+    if (f) { if (f.scrollIntoView) f.scrollIntoView({ block: 'center', behavior: 'smooth' }); var i = document.getElementById('nc-nome'); if (i) i.focus({ preventScroll: true }); }
+  };
+  BC.act['cancelar-novo'] = function () { BC.ui.novoAberto = false; BC.render(); };
+
+  BC.act['exportar-csv'] = function () {
+    var cols = [['nome', 'Nome'], ['negocio', 'Negócio'], ['nicho', 'Nicho'], ['cidade', 'Cidade'], ['telefone', 'Telefone'], ['email', 'E-mail'], ['instagram', 'Instagram'], ['origem', 'Origem'], ['canal', 'Canal'], ['etapa', 'Etapa'], ['toques', 'Toques'], ['proxima_data', 'Próxima etapa'], ['notas', 'Notas']];
+    function cel(v) { v = v == null ? '' : String(v); return /[";\n,]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+    var linhas = [cols.map(function (c) { return c[1]; }).join(',')].concat(S.all('prospects').map(function (p) { return cols.map(function (c) { return cel(c[0] === 'etapa' ? BC.nomeEtapa(p.etapa) : p[c[0]]); }).join(','); }));
+    var csv = linhas.join('\n');
+    try { navigator.clipboard.writeText(csv).then(function () { BC.toast('CSV copiado. Cole em uma planilha.'); }, function () { baixar(csv); }); } catch (e) { baixar(csv); }
+    function baixar(txt) {
+      try { var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + txt], { type: 'text/csv' })); a.download = 'prospeccao.csv'; document.body.appendChild(a); a.click(); a.remove(); BC.toast('CSV exportado.'); }
+      catch (e2) { BC.toast('Não consegui exportar neste navegador.', true); }
+    }
+  };
+})(window);
+
+</script>
+<script>
+/* Agência BC · roteador, delegação de eventos e inicialização. */
+(function (root) {
+  'use strict';
+  var BC = root.BC, S = root.BCStore, esc = BC.esc;
+  var ROTAS = [['painel', 'Painel'], ['clientes', 'Clientes'], ['prospeccao', 'CRM'], ['previsao', 'Previsão'], ['churn', 'Churn'], ['dados', 'Dados']];
+  var pronto = false;
+
+  function rota() {
+    var h = (location.hash || '').replace(/^#/, '') || 'painel';
+    if (h.indexOf('c-') === 0) return { nome: 'cliente', id: h.slice(2), nav: 'clientes' };
+    if (!BC.views[h]) h = 'painel';
+    return { nome: h, nav: h };
+  }
+
+  // Espaço da logo: coloque o arquivo em assets/ e informe o caminho em LOGO (js/config.js). Vazio = espaço reservado.
+  function logo() {
+    var l = root.BC_CONFIG && root.BC_CONFIG.LOGO;
+    return l ? '<img class="marca-logo" src="' + esc(l) + '" alt="Logo">' : '<span class="marca-logo vazio" aria-hidden="true"></span>';
+  }
+  function barra(nav) {
+    var sup = S.modo() === 'supabase';
+    return '<header class="topbar"><div class="topbar-in"><a class="marca" href="#painel">' + logo() + '<span class="marca-nome">Agência BC</span></a>' +
+      '<div class="topbar-acoes">' + (sup ? '<button class="btn mini fantasma" data-act="sair">Sair</button>' : '<span class="tag" title="Os dados ficam só neste navegador até ligarmos o Supabase">modo local</span>') +
+      '<button class="btn mini fantasma" data-act="tema" aria-label="Alternar tema">Tema</button></div></div>' +
+      '<nav class="nav" aria-label="Seções">' + ROTAS.map(function (r) { return '<a href="#' + r[0] + '"' + (r[0] === nav ? ' aria-current="page"' : '') + '>' + r[1] + '</a>'; }).join('') + '</nav></header>';
+  }
+
+  BC.render = function () {
+    if (!pronto) return;
+    var r = rota(), app = document.getElementById('app'), html;
+    try { html = r.nome === 'cliente' ? BC.views.cliente(r.id) : BC.views[r.nome](); }
+    catch (e) { console.error(e); html = '<div class="aviso warn"><span>Algo deu errado ao montar esta tela: ' + esc(e.message) + '</span></div>'; }
+    var y = window.scrollY, foco = document.activeElement && document.activeElement.id;
+    app.innerHTML = barra(r.nav) + '<main class="pagina">' + html + '</main>';
+    if (foco) { var el = document.getElementById(foco); if (el && el.focus) { try { el.focus({ preventScroll: true }); if (el.setSelectionRange && el.type === 'search') el.setSelectionRange(el.value.length, el.value.length); } catch (e) { /* ok */ } } }
+    window.scrollTo(0, y);
+  };
+
+  function tema() {
+    var r = document.documentElement, atual = r.getAttribute('data-theme');
+    var escuro = atual !== 'light';
+    var novo = escuro ? 'light' : 'dark';
+    r.setAttribute('data-theme', novo);
+    try { localStorage.setItem('bc:tema', novo); } catch (e) { /* ok */ }
+  }
+  BC.act['fechar'] = function (el) { BC.fechar(el); };
+  BC.act['tema'] = tema;
+  BC.act['sair'] = async function () { await root.BCSupabase.sair(); location.reload(); };
+
+  function achar(el, attr) { return el && el.closest ? el.closest('[' + attr + ']') : null; }
+  function roda(nome, el, ev) {
+    var f = BC.act[nome];
+    if (!f) { console.warn('ação desconhecida', nome); return; }
+    var r = f(el, ev);
+    if (r && r.catch) r.catch(function (e) { console.error(e); BC.toast(e.message || 'Algo deu errado', true); });
+  }
+
+  document.addEventListener('click', function (ev) {
+    var lk = ev.target.closest && ev.target.closest('a[href]');
+    if (lk && !lk.hasAttribute('data-act')) return; // links normais (WhatsApp, e-mail...) seguem o caminho deles
+    var el = achar(ev.target, 'data-act');
+    if (!el) return;
+    if (ev.target.closest('a[href], button, input, select') && ev.target.closest('a[href], button, input, select') !== el && el.tagName !== 'BUTTON' && el.tagName !== 'A') {
+      // clique em botão/link dentro de um cartão clicável: o botão interno manda
+      var interno = ev.target.closest('[data-act]');
+      if (interno && interno !== el) el = interno;
+    }
+    if (el.tagName === 'A' && el.getAttribute('data-act') === 'fechar-e-ir') { roda('fechar-e-ir', el, ev); return; }
+    ev.preventDefault();
+    roda(el.getAttribute('data-act'), el, ev);
+  });
+  document.addEventListener('change', function (ev) {
+    var el = achar(ev.target, 'data-change');
+    if (el) roda(el.getAttribute('data-change'), el, ev);
+    var live = ev.target.closest && ev.target.closest('[data-live]');
+    if (live && BC.live[live.dataset.live]) BC.live[live.dataset.live](live);
+  });
+  document.addEventListener('input', function (ev) {
+    var el = achar(ev.target, 'data-input');
+    if (el) roda(el.getAttribute('data-input'), el, ev);
+    var live = ev.target.closest && ev.target.closest('[data-live]');
+    if (live && BC.live[live.dataset.live]) BC.live[live.dataset.live](live);
+  });
+  document.addEventListener('submit', function (ev) {
+    var f = ev.target.closest('[data-form]');
+    if (!f) return;
+    ev.preventDefault();
+    var fn = BC.forms[f.dataset.form];
+    if (fn) fn(f);
+  });
+  window.addEventListener('hashchange', function () { window.scrollTo(0, 0); BC.render(); });
+
+  function telaLogin(msg) {
+    document.getElementById('app').innerHTML = '<form class="login" id="form-login"><h1 style="font-family:var(--f-tit,inherit)">Agência <span style="color:var(--accent)">BC</span></h1>' +
+      '<div class="campo"><label for="lg-email">E-mail</label><input id="lg-email" type="email" autocomplete="username" required></div>' +
+      '<div class="campo"><label for="lg-senha">Senha</label><input id="lg-senha" type="password" autocomplete="current-password" required></div>' +
+      '<p class="erro-form" role="alert"' + (msg ? '' : ' hidden') + '>' + esc(msg || '') + '</p><button class="btn primario" type="submit">Entrar</button></form>';
+    document.getElementById('form-login').addEventListener('submit', async function (ev) {
+      ev.preventDefault();
+      try { await root.BCSupabase.entrar(document.getElementById('lg-email').value, document.getElementById('lg-senha').value); location.reload(); }
+      catch (e) { telaLogin('E-mail ou senha incorretos.'); }
+    });
+  }
+
+  async function iniciar() {
+    try { var t = localStorage.getItem('bc:tema'); if (t) document.documentElement.setAttribute('data-theme', t); } catch (e) { /* ok */ }
+    try { await S.init(); }
+    catch (e) {
+      if (e.precisaLogin) return telaLogin();
+      document.getElementById('app').innerHTML = '<main class="pagina"><div class="aviso warn"><span>Não consegui iniciar: ' + esc(e.message) + '</span></div></main>';
+      return;
+    }
+    S.onChange(function () { BC.render(); });
+    pronto = true;
+    BC.render();
+  }
+  BC.iniciar = iniciar;
+  if (!root.__BC_SEM_AUTO) iniciar();
+})(window);
+
+</script>
+</body>
+</html>
