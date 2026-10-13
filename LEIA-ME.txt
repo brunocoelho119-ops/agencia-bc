@@ -1,1 +1,0 @@
-Coloque aqui o arquivo da logo (ex.: logo.png ou logo.svg) e informe o caminho em LOGO no js/config.js. Altura ideal: 38px (ou o dobro, 76px, para telas nítidas).
