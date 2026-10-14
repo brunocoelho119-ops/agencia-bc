@@ -421,6 +421,16 @@ dialog.gaveta { margin: 0 0 0 auto; width: min(460px, 100vw); height: 100dvh; ma
 }
 @supports (padding: max(0px)) { body { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); } }
 
+/* arrastar cartões no quadro */
+.quadro .cartao { cursor: grab; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.cartao.arrastando { opacity: .3; }
+.cartao.cartao-fantasma { position: fixed; z-index: 9999; margin: 0; pointer-events: none; cursor: grabbing; box-shadow: 0 14px 34px rgba(0,0,0,.55); transform: rotate(2deg); opacity: .96; }
+.col { transition: background .12s, outline-color .12s; }
+.col.alvo { outline: 2px dashed var(--accent); outline-offset: -2px; background: color-mix(in srgb, var(--accent) 10%, var(--surface-2)); }
+body.arrastando-cartao { -webkit-user-select: none; user-select: none; cursor: grabbing; }
+body.arrastando-cartao * { cursor: grabbing !important; }
+@media (max-width: 640px) { body.arrastando-cartao .quadro { scroll-snap-type: none; } }
+
 </style>
 </head>
 <body>
@@ -1878,6 +1888,19 @@ window.BC_CONFIG = {
       BC.toast('Movido para ' + BC.nomeEtapa(prox) + '.');
     });
   };
+  // Arrastar o cartão no quadro: mesma regra do botão "avançar", mas aceita qualquer coluna.
+  BC.moverProspect = function (id, nova) {
+    var p = S.get('prospects', id); if (!p || p.etapa === nova) return;
+    if (nova === 'fechado') { BC.converterProspect(id); return; }
+    var extra = {};
+    if (idx(nova) > idx(p.etapa)) {
+      extra = nova === 'respondeu' ? { proxima_data: C.hoje(), proxima_acao: 'Enviar o mini-diagnóstico' } : { proxima_data: null, proxima_acao: '' };
+    }
+    BC.seguro(async function () {
+      await mudarEtapa(id, nova, extra);
+      BC.toast('Movido para ' + BC.nomeEtapa(nova) + '.');
+    });
+  };
   BC.converterProspect = function (id) {
     var p = S.get('prospects', id); if (!p) return;
     BC.abrirCliente(null, {
@@ -2482,7 +2505,7 @@ window.BC_CONFIG = {
     C.ORDEM_FUNIL.forEach(function (et) {
       var col = todos.filter(function (p) { return p.etapa === et; });
       col.sort(function (a, b) { return (a.proxima_data || '9999') < (b.proxima_data || '9999') ? -1 : 1; });
-      out += '<div class="col"><div class="col-cab">' + esc(BC.nomeEtapa(et)) + '<span>' + col.length + '</span></div>';
+      out += '<div class="col" data-etapa="' + et + '"><div class="col-cab">' + esc(BC.nomeEtapa(et)) + '<span>' + col.length + '</span></div>';
       col.slice(0, 40).forEach(function (p) { out += cartao(p, h); });
       if (col.length > 40) out += '<p class="small muted" style="padding:4px 6px">+ ' + (col.length - 40) + ' na vista Lista</p>';
       if (!col.length) out += '<p class="small faint" style="padding:6px 4px">vazio</p>';
@@ -2638,6 +2661,100 @@ window.BC_CONFIG = {
       catch (e2) { BC.toast('Não consegui exportar neste navegador.', true); }
     }
   };
+
+  // ───────── arrastar cartões entre colunas (mouse e toque) ─────────
+  // No celular, segure o cartão por um instante para pegar; deslizar logo de cara continua rolando a tela.
+  (function () {
+    var st = null, ultimoArrasto = 0, ultimoToque = 0;
+
+    function colEm(x, y) {
+      var e = document.elementFromPoint(x, y);
+      return e && e.closest ? e.closest('.quadro .col') : null;
+    }
+    function inicio(ev, x, y, toque) {
+      if (st || !ev.target.closest) return;
+      var el = ev.target.closest('.quadro .cartao'); if (!el) return;
+      if (ev.target.closest('a, button, input, select, textarea')) return;
+      st = { el: el, id: el.dataset.id, x0: x, y0: y, x: x, y: y, ativo: false, toque: toque, fant: null, col: null, timer: null, loop: null };
+      if (toque) st.timer = setTimeout(function () { if (st && !st.ativo) comecar(); }, 280);
+    }
+    function comecar() {
+      var r = st.el.getBoundingClientRect();
+      st.ativo = true; st.dx = st.x - r.left; st.dy = st.y - r.top;
+      var f = st.el.cloneNode(true);
+      f.removeAttribute('data-act'); f.removeAttribute('data-id'); f.removeAttribute('tabindex');
+      f.classList.add('cartao-fantasma'); f.style.width = r.width + 'px';
+      document.body.appendChild(f); st.fant = f;
+      st.el.classList.add('arrastando'); document.body.classList.add('arrastando-cartao');
+      try { if (st.toque && navigator.vibrate) navigator.vibrate(15); } catch (e) {}
+      st.loop = setInterval(posicionar, 30);
+      posicionar();
+    }
+    function posicionar() {
+      if (!st || !st.ativo) return;
+      st.fant.style.left = (st.x - st.dx) + 'px'; st.fant.style.top = (st.y - st.dy) + 'px';
+      var q = document.querySelector('.quadro');
+      if (q) {
+        var qr = q.getBoundingClientRect();
+        if (st.x < qr.left + 56) q.scrollLeft -= 14; else if (st.x > qr.right - 56) q.scrollLeft += 14;
+      }
+      if (st.y < 70) window.scrollBy(0, -14); else if (st.y > window.innerHeight - 70) window.scrollBy(0, 14);
+      var col = colEm(st.x, st.y);
+      if (col !== st.col) {
+        if (st.col) st.col.classList.remove('alvo');
+        if (col) col.classList.add('alvo');
+        st.col = col;
+      }
+    }
+    function mover(ev, x, y) {
+      if (!st) return;
+      st.x = x; st.y = y;
+      if (!st.ativo) {
+        var d = Math.abs(x - st.x0) + Math.abs(y - st.y0);
+        if (st.toque) { if (d > 10) fim(true); return; }
+        if (d < 6) return;
+        comecar();
+      }
+      if (ev.cancelable) ev.preventDefault();
+      posicionar();
+    }
+    function fim(cancelar) {
+      if (!st) return;
+      var s = st; st = null;
+      clearTimeout(s.timer); clearInterval(s.loop);
+      if (!s.ativo) return;
+      if (s.fant) s.fant.remove();
+      s.el.classList.remove('arrastando');
+      if (s.col) s.col.classList.remove('alvo');
+      document.body.classList.remove('arrastando-cartao');
+      ultimoArrasto = Date.now();
+      if (cancelar) return;
+      var col = colEm(s.x, s.y);
+      if (col && col.dataset.etapa) BC.moverProspect(s.id, col.dataset.etapa);
+    }
+
+    document.addEventListener('mousedown', function (ev) {
+      if (ev.button !== 0 || Date.now() - ultimoToque < 700) return;
+      inicio(ev, ev.clientX, ev.clientY, false);
+    });
+    document.addEventListener('mousemove', function (ev) { if (st && !st.toque) mover(ev, ev.clientX, ev.clientY); });
+    document.addEventListener('mouseup', function () { if (st && !st.toque) fim(false); });
+    document.addEventListener('touchstart', function (ev) {
+      ultimoToque = Date.now();
+      if (ev.touches.length !== 1) { fim(true); return; }
+      inicio(ev, ev.touches[0].clientX, ev.touches[0].clientY, true);
+    }, { passive: true });
+    document.addEventListener('touchmove', function (ev) {
+      if (st && st.toque && ev.touches.length) mover(ev, ev.touches[0].clientX, ev.touches[0].clientY);
+    }, { passive: false });
+    document.addEventListener('touchend', function () { ultimoToque = Date.now(); if (st && st.toque) fim(false); });
+    document.addEventListener('touchcancel', function () { if (st && st.toque) fim(true); });
+    document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') fim(true); });
+    // depois de arrastar, o "clique" de soltar não pode abrir o cartão
+    document.addEventListener('click', function (ev) {
+      if (Date.now() - ultimoArrasto < 400) { ev.stopPropagation(); ev.preventDefault(); }
+    }, true);
+  })();
 })(window);
 
 </script>
