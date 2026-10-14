@@ -816,13 +816,19 @@ window.BC_CONFIG = {
     email: /(e-?mail)/,
     instagram: /(instagram|insta\b|^ig$|@)/,
     cidade: /(cidade|municipio)/,
+    estado: /^(estado|uf)$/,
     nicho: /(nicho|segmento|categoria|ramo)/,
     negocio: /(empresa|negocio|clinica|estabelecimento|razao|fantasia|loja)/,
-    nome: /^(nome|contato|responsavel|nome do contato|proprietari)/
+    nome: /^(nome|contato|responsavel|nome do contato|proprietari)/,
+    abordagem: /^(mensagem|abordagem$)/,
+    diagnostico: /(observacao[_ ]?ia|diagnostico|analise)/,
+    status: /^(status|situacao|etapa)/,
+    endereco: /(endereco|address)/,
+    site: /^(site|website|url|link)/
   };
   function adivinharMapeamento(headers) {
     var mapa = {}, usados = {};
-    ['telefone', 'email', 'instagram', 'cidade', 'nicho', 'negocio', 'nome'].forEach(function (campo) {
+    ['telefone', 'email', 'instagram', 'cidade', 'estado', 'nicho', 'negocio', 'abordagem', 'diagnostico', 'status', 'endereco', 'site', 'nome'].forEach(function (campo) {
       for (var i = 0; i < headers.length; i++) {
         if (usados[i]) continue;
         if (PADROES[campo].test(semAcento(headers[i]))) { mapa[campo] = i; usados[i] = true; return; }
@@ -1232,7 +1238,7 @@ window.BC_CONFIG = {
   BC.act = {};      // ações disparadas por data-act="..."
   BC.forms = {};    // formulários com data-form="..."
   BC.views = {};    // telas
-  BC.ui = { filtroRisco: false, abaPros: 'hoje', pVista: 'quadro', novoAberto: false, pEtapa: '', pOrigem: '', pLista: '', pBusca: '' };
+  BC.ui = { filtroRisco: false, abaPros: 'hoje', pVista: 'quadro', novoAberto: false, pEtapa: '', pEstado: '', pOrigem: '', pLista: '', pBusca: '' };
 
   // ───────────── formatação ─────────────
   BC.esc = function (s) {
@@ -1746,6 +1752,8 @@ window.BC_CONFIG = {
       campo('pr-telefone', 'Telefone / WhatsApp', '<input id="pr-telefone" name="telefone" type="tel" inputmode="tel" value="' + esc(p.telefone || '') + '">') +
       campo('pr-email', 'E-mail', '<input id="pr-email" name="email" type="email" value="' + esc(p.email || '') + '">') +
       campo('pr-instagram', '@ do Instagram', '<input id="pr-instagram" name="instagram" type="text" value="' + esc(p.instagram ? '@' + p.instagram : '') + '">') +
+      campo('pr-cidade', 'Cidade', '<input id="pr-cidade" name="cidade" type="text" value="' + esc(p.cidade || '') + '">') +
+      campo('pr-estado', 'Estado (UF)', '<input id="pr-estado" name="estado" type="text" maxlength="2" style="text-transform:uppercase" placeholder="Ex.: RR" value="' + esc(p.estado || '') + '">') +
       campo('pr-canal', 'Canal', '<select id="pr-canal" name="canal">' + opcoes(CANAIS, p.canal) + '</select>') +
       campo('pr-etapa', 'Etapa', '<select id="pr-etapa" name="etapa">' + opcoes(C.ETAPAS.map(function (e) { return [e.id, e.nome]; }), p.etapa) + '</select>') +
       campo('pr-proxima_data', 'Próxima etapa', '<input id="pr-proxima_data" name="proxima_data" type="date" value="' + esc(p.proxima_data || '') + '">') +
@@ -1757,7 +1765,6 @@ window.BC_CONFIG = {
       '<div class="gv-links">' + BC.iconesContato(p) + '</div>' +
       '<details class="gv-mais"><summary>Mais detalhes</summary><div class="gv-mais-corpo">' +
       campo('pr-nicho', 'Nicho', '<input id="pr-nicho" name="nicho" type="text" value="' + esc(p.nicho || '') + '">') +
-      campo('pr-cidade', 'Cidade', '<input id="pr-cidade" name="cidade" type="text" value="' + esc(p.cidade || '') + '">') +
       campo('pr-origem', 'Origem', '<select id="pr-origem" name="origem">' + opcoes(ORIGENS, p.origem) + '</select>') +
       campo('pr-campanha', 'Campanha / formulário', '<input id="pr-campanha" name="campanha" type="text" value="' + esc(p.campanha || '') + '">') +
       campo('pr-lista_id', 'Lista', '<select id="pr-lista_id" name="lista_id"><option value="">Sem lista</option>' + opcoes(listas.map(function (l) { return [l.id, l.nome]; }), p.lista_id || '') + '</select>') +
@@ -1787,7 +1794,7 @@ window.BC_CONFIG = {
     if (!nome) return BC.erroForm(form, 'Informe o nome do contato ou do negócio.');
     var tel = BC.txt(d.telefone), telNorm = C.normalizarTelefone(tel);
     var row = {
-      nome: nome, negocio: BC.txt(d.negocio), nicho: BC.txt(d.nicho), cidade: BC.txt(d.cidade), telefone: telNorm || tel,
+      nome: nome, negocio: BC.txt(d.negocio), nicho: BC.txt(d.nicho), cidade: BC.txt(d.cidade), estado: BC.txt(d.estado).toUpperCase().slice(0, 2), telefone: telNorm || tel,
       email: BC.txt(d.email).toLowerCase(), instagram: C.normalizarInstagram(d.instagram), canal: d.canal, origem: d.origem, campanha: BC.txt(d.campanha),
       lista_id: d.lista_id || null, etapa: d.etapa, proxima_data: d.proxima_data || null, proxima_acao: BC.txt(d.proxima_acao),
       abordagem: BC.txt(d.abordagem), diagnostico: BC.txt(d.diagnostico), notas: BC.txt(d.notas), atualizado_em: agora()
@@ -1897,27 +1904,44 @@ window.BC_CONFIG = {
   };
 
   // ───────────── importação de planilha ─────────────
-  var CAMPOS_IMP = [['nome', 'Nome do contato'], ['negocio', 'Negócio'], ['telefone', 'Telefone / WhatsApp'], ['instagram', 'Instagram'], ['email', 'E-mail'], ['cidade', 'Cidade'], ['nicho', 'Nicho']];
+  var CAMPOS_IMP = [['nome', 'Nome do contato'], ['negocio', 'Negócio'], ['telefone', 'Telefone / WhatsApp'], ['instagram', 'Instagram'], ['email', 'E-mail'], ['cidade', 'Cidade'], ['estado', 'Estado (UF)'], ['endereco', 'Endereço (para extrair a cidade)'], ['nicho', 'Nicho'], ['site', 'Site'], ['abordagem', 'Mensagem de abordagem'], ['diagnostico', 'Análise / mini-diagnóstico'], ['status', 'Status (etapa)']];
   BC.imp = { parsed: null, arquivo: '' };
 
   BC.act['importar'] = function () {
     BC.imp = { parsed: null, arquivo: '' };
-    var html = '<div class="dlg" data-importacao>' + BC.cabDialogo('Importar planilha de prospecção', 'No Google Sheets: Arquivo → Baixar → Valores separados por vírgula (.csv).') +
+    var html = '<div class="dlg" data-importacao>' + BC.cabDialogo('Importar planilha de prospecção', 'Aceita planilha do Excel (.xlsx) ou CSV. No Google Sheets: Arquivo → Baixar.') +
       '<div id="imp-passo1" class="secao" style="border-top:0;padding-top:0">' +
-      campo('imp-arq', 'Arquivo CSV', '<input id="imp-arq" type="file" accept=".csv,.tsv,.txt,text/csv,text/plain" data-change="imp-arquivo">') +
+      campo('imp-arq', 'Arquivo (.xlsx ou .csv)', '<input id="imp-arq" type="file" accept=".xlsx,.xls,.csv,.tsv,.txt,text/csv,text/plain" data-change="imp-arquivo">') +
       campo('imp-colar', 'Ou cole as linhas da planilha aqui', '<textarea id="imp-colar" style="min-height:90px" placeholder="Nome;Empresa;WhatsApp&#10;..."></textarea>') +
       '<p class="erro-form" id="imp-erro" hidden role="alert"></p>' +
       '<div class="dlg-rodape"><button type="button" class="btn" data-act="fechar">Cancelar</button><button type="button" class="btn primario" data-act="imp-ler">Ler planilha</button></div></div>' +
       '<form id="imp-passo2" data-form="importar" hidden></form></div>';
     BC.dialogo(html, { semFoco: true });
   };
+  function carregaXlsx() {
+    if (root.XLSX) return Promise.resolve();
+    return new Promise(function (ok, no) {
+      var sc = document.createElement('script');
+      sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      sc.onload = ok; sc.onerror = function () { no(new Error('Não consegui carregar o leitor de Excel. Exporte a planilha como CSV e tente de novo.')); };
+      document.head.appendChild(sc);
+    });
+  }
   BC.act['imp-arquivo'] = function (el) {
     var f = el.files && el.files[0]; if (!f) return;
-    var r = new FileReader();
-    BC.imp.arquivo = f.name.replace(/\.[^.]+$/, '');
-    r.onload = function () { var ta = document.getElementById('imp-colar'); if (ta) ta.value = r.result; BC.act['imp-ler'](el); };
+    var r = new FileReader(), ehXlsx = /\.xlsx?$/i.test(f.name);
+    BC.imp.arquivo = f.name.replace(/\.[^.]+$/, '').replace(/^[0-9a-f]{6,}-/i, '');
+    r.onload = function () {
+      var ta = document.getElementById('imp-colar');
+      if (!ehXlsx) { if (ta) ta.value = r.result; BC.act['imp-ler'](el); return; }
+      carregaXlsx().then(function () {
+        var wb = root.XLSX.read(r.result, { type: 'array' });
+        var csv = root.XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]], { FS: ';', blankrows: false });
+        if (ta) ta.value = csv; BC.act['imp-ler'](el);
+      }).catch(function (e) { BC.toast(e.message || 'Não consegui ler a planilha.', true); });
+    };
     r.onerror = function () { BC.toast('Não consegui ler o arquivo.', true); };
-    r.readAsText(f);
+    if (ehXlsx) r.readAsArrayBuffer(f); else r.readAsText(f);
   };
   BC.act['imp-ler'] = function (el) {
     var raiz = el.closest('[data-importacao]'), ta = raiz.querySelector('#imp-colar'), erro = raiz.querySelector('#imp-erro');
@@ -1937,6 +1961,7 @@ window.BC_CONFIG = {
       campo('imp-lista', 'Nome da lista', '<input id="imp-lista" name="lista" type="text" required value="' + esc(nomeLista) + '">') +
       campo('imp-nicho', 'Nicho padrão', '<input id="imp-nicho" name="nicho" type="text" placeholder="Usado quando a planilha não tem nicho">') +
       campo('imp-cidade', 'Cidade padrão', '<input id="imp-cidade" name="cidade" type="text">') +
+      campo('imp-estado', 'Estado padrão (UF)', '<input id="imp-estado" name="estado" type="text" maxlength="2" placeholder="Ex.: RR">') +
       campo('imp-canal', 'Canal do primeiro toque', '<select id="imp-canal" name="canal">' + opcoes(CANAIS, 'whatsapp') + '</select>') + '</div></div>' +
       '<div class="secao"><h2>Prévia</h2><div class="previa"><table class="tabela"><thead><tr>' + parsed.headers.map(function (h) { return '<th>' + esc(h) + '</th>'; }).join('') + '</tr></thead><tbody>' +
       parsed.rows.slice(0, 5).map(function (r) { return '<tr>' + parsed.headers.map(function (_, i) { return '<td>' + esc(r[i] || '') + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>' +
@@ -1945,6 +1970,18 @@ window.BC_CONFIG = {
     f.hidden = false; raiz.querySelector('#imp-passo1').hidden = true;
     BC.act['imp-mapa'](f);
   };
+  function etapaDeStatus(t) {
+    t = C.semAcento(t);
+    if (!t) return '';
+    if (/fechad|cliente|ganh/.test(t)) return 'fechado';
+    if (/perdid|descart|sem interesse/.test(t)) return 'perdido';
+    if (/propost/.test(t)) return 'proposta';
+    if (/reuni/.test(t)) return 'reuniao';
+    if (/diagnost/.test(t)) return 'diagnostico';
+    if (/respond/.test(t)) return 'respondeu';
+    if (/contato feito|abordad|contatad/.test(t)) return 'abordado';
+    return '';
+  }
   function montar(form) {
     var d = BC.dados(form), parsed = BC.imp.parsed, mapa = {};
     CAMPOS_IMP.forEach(function (c) { mapa[c[0]] = Number(d['map_' + c[0]]); if (isNaN(mapa[c[0]])) mapa[c[0]] = -1; });
@@ -1956,11 +1993,22 @@ window.BC_CONFIG = {
       var tel = C.normalizarTelefone(g('telefone')), ig = C.normalizarInstagram(g('instagram'));
       var nome = g('nome') || g('negocio') || ig || g('telefone');
       if (!nome) { vazio++; return; }
-      var p = { nome: nome, negocio: g('negocio'), nicho: g('nicho') || BC.txt(d.nicho), cidade: g('cidade') || BC.txt(d.cidade), telefone: tel, email: g('email').toLowerCase(), instagram: ig };
+      var site = g('site');
+      if (!ig && /instagram\.com/i.test(site)) { ig = C.normalizarInstagram(site); site = ''; }
+      var cidade = g('cidade');
+      if (!cidade && g('endereco')) { var mc = g('endereco').match(/,\s*([^,]+?)\s*-\s*[A-Z]{2}\b/); if (mc) cidade = mc[1].trim(); }
+      var estado = g('estado').toUpperCase().slice(0, 2);
+      if (!estado && g('endereco')) { var me = g('endereco').match(/-\s*([A-Z]{2})\b/); if (me) estado = me[1]; }
+      var p = { nome: nome, negocio: g('negocio'), nicho: g('nicho') || BC.txt(d.nicho), cidade: cidade || BC.txt(d.cidade), estado: estado || BC.txt(d.estado).toUpperCase().slice(0, 2), telefone: tel, email: g('email').toLowerCase(), instagram: ig };
+      if (g('abordagem')) p.abordagem = g('abordagem');
+      if (g('diagnostico')) p.diagnostico = g('diagnostico');
+      var et = etapaDeStatus(g('status'));
+      if (et) { p.etapa = et; p.etapa_max = et; if (et === 'abordado') p.toques = 1; }
       var ks = C.chavesDedupe(p);
       if (ks.some(function (k) { return existentes[k]; })) { dup++; return; }
       ks.forEach(function (k) { existentes[k] = true; });
       var notas = [];
+      if (site) notas.push('Site: ' + site);
       if (d.extras) parsed.headers.forEach(function (h, i) { var v = BC.txt(r[i]); if (!usadas[i] && v) notas.push((h || 'Coluna ' + (i + 1)) + ': ' + v); });
       p.notas = notas.join('\n');
       novos.push(p);
@@ -2375,7 +2423,8 @@ window.BC_CONFIG = {
     var a = [];
     if (p.negocio && p.negocio !== p.nome) a.push(p.negocio);
     if (p.nicho && p.nicho !== p.negocio) a.push(p.nicho);
-    if (p.cidade) a.push(p.cidade);
+    var loc = [p.cidade, p.estado].filter(Boolean).join(' - ');
+    if (loc) a.push(loc);
     return a.join(' · ');
   }
   function digitos(t) { return String(t || '').replace(/\D/g, ''); }
@@ -2394,6 +2443,11 @@ window.BC_CONFIG = {
       ico(d ? 'tel:+' + d : '', '&#9742;', 'Ligar') + '</span>';
   };
 
+  function estados(todos) {
+    var ufs = {}; todos.forEach(function (p) { if (p.estado) ufs[p.estado] = (ufs[p.estado] || 0) + 1; });
+    var ks = Object.keys(ufs).sort(); if (!ks.length) return '';
+    return '<select data-change="filtro-pros" data-filtro="pEstado" aria-label="Estado"><option value="">Todos os estados</option>' + ks.map(function (k) { return '<option value="' + k + '"' + (BC.ui.pEstado === k ? ' selected' : '') + '>' + k + ' (' + ufs[k] + ')</option>'; }).join('') + '</select>';
+  }
   function quando(p, h) {
     if (!p.proxima_data) return '';
     var d = C.diffDias(h, p.proxima_data);
@@ -2418,7 +2472,8 @@ window.BC_CONFIG = {
     return todos.filter(function (p) {
       if (u.pEtapa && p.etapa !== u.pEtapa) return false;
       if (u.pOrigem && p.canal !== u.pOrigem) return false; // pOrigem guarda o canal
-      if (q && C.semAcento([p.nome, p.negocio, p.nicho, p.cidade, p.telefone, p.instagram, p.email].join(' ')).indexOf(q) < 0) return false;
+      if (u.pEstado && p.estado !== u.pEstado) return false;
+      if (q && C.semAcento([p.nome, p.negocio, p.nicho, p.cidade, p.estado, p.telefone, p.instagram, p.email].join(' ')).indexOf(q) < 0) return false;
       return true;
     });
   }
@@ -2481,6 +2536,8 @@ window.BC_CONFIG = {
       '<div class="campo"><label for="nc-tel">Telefone / WhatsApp</label><input id="nc-tel" name="telefone" type="tel" inputmode="tel" placeholder="Ex: (19) 99999-8888"></div>' +
       '<div class="campo"><label for="nc-email">E-mail</label><input id="nc-email" name="email" type="email" placeholder="Ex: rafael@barbearia.com"></div>' +
       '<div class="campo"><label for="nc-ig">@ do Instagram</label><input id="nc-ig" name="instagram" type="text" placeholder="Ex: @barbeariaimperial"></div>' +
+      '<div class="campo"><label for="nc-cidade">Cidade</label><input id="nc-cidade" name="cidade" type="text" placeholder="Ex: Boa Vista"></div>' +
+      '<div class="campo"><label for="nc-estado">Estado (UF)</label><input id="nc-estado" name="estado" type="text" maxlength="2" placeholder="Ex: RR" style="text-transform:uppercase"></div>' +
       '<div class="campo"><label for="nc-canal">Canal do primeiro toque</label><select id="nc-canal" name="canal">' + o + '</select></div>' +
       '<div class="campo"><label for="nc-prox">Próxima etapa</label><input id="nc-prox" name="proxima_data" type="date" value="' + C.hoje() + '"></div></div>' +
       '<input type="hidden" name="etapa" value="novo"><input type="hidden" name="origem" value="lista">' +
@@ -2535,7 +2592,7 @@ window.BC_CONFIG = {
       '<input type="search" id="busca-pros" placeholder="Buscar nome, negócio, cidade…" value="' + esc(u.pBusca) + '" data-input="busca-pros" aria-label="Buscar contatos">' +
       '<select data-change="filtro-pros" data-filtro="pEtapa" aria-label="Etapa"><option value="">Todas as etapas</option>' + C.ETAPAS.map(function (e) { return '<option value="' + e.id + '"' + (u.pEtapa === e.id ? ' selected' : '') + '>' + esc(e.nome) + '</option>'; }).join('') + '</select>' +
       '<select data-change="filtro-pros" data-filtro="pOrigem" aria-label="Canal"><option value="">Todos os canais</option>' + CANAIS.map(function (c) { return '<option value="' + c[0] + '"' + (u.pOrigem === c[0] ? ' selected' : '') + '>' + c[1] + '</option>'; }).join('') + '</select>' +
-      '<span class="seg" role="radiogroup" aria-label="Vista">' + [['quadro', 'Quadro'], ['lista', 'Lista'], ['funil', 'Funil']].map(function (v) {
+      estados(todos) + '<span class="seg" role="radiogroup" aria-label="Vista">' + [['quadro', 'Quadro'], ['lista', 'Lista'], ['funil', 'Funil']].map(function (v) {
         return '<label><input type="radio" name="vista" value="' + v[0] + '"' + (u.pVista === v[0] ? ' checked' : '') + ' data-change="pros-vista"><span style="width:auto;padding:0 14px;font-family:var(--f-body);font-weight:700">' + v[1] + '</span></label>';
       }).join('') + '</span>' +
       '<span class="barra-fer-fim"><button class="btn" data-act="importar">Importar planilha</button><button class="btn" data-act="exportar-csv">Exportar CSV</button>' +
@@ -2571,7 +2628,7 @@ window.BC_CONFIG = {
   BC.act['cancelar-novo'] = function () { BC.ui.novoAberto = false; BC.render(); };
 
   BC.act['exportar-csv'] = function () {
-    var cols = [['nome', 'Nome'], ['negocio', 'Negócio'], ['nicho', 'Nicho'], ['cidade', 'Cidade'], ['telefone', 'Telefone'], ['email', 'E-mail'], ['instagram', 'Instagram'], ['origem', 'Origem'], ['canal', 'Canal'], ['etapa', 'Etapa'], ['toques', 'Toques'], ['proxima_data', 'Próxima etapa'], ['notas', 'Notas']];
+    var cols = [['nome', 'Nome'], ['negocio', 'Negócio'], ['nicho', 'Nicho'], ['cidade', 'Cidade'], ['estado', 'Estado'], ['telefone', 'Telefone'], ['email', 'E-mail'], ['instagram', 'Instagram'], ['origem', 'Origem'], ['canal', 'Canal'], ['etapa', 'Etapa'], ['toques', 'Toques'], ['proxima_data', 'Próxima etapa'], ['notas', 'Notas']];
     function cel(v) { v = v == null ? '' : String(v); return /[";\n,]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
     var linhas = [cols.map(function (c) { return c[1]; }).join(',')].concat(S.all('prospects').map(function (p) { return cols.map(function (c) { return cel(c[0] === 'etapa' ? BC.nomeEtapa(p.etapa) : p[c[0]]); }).join(','); }));
     var csv = linhas.join('\n');
