@@ -1807,7 +1807,7 @@ window.BC_CONFIG = {
         await S.update('prospects', id, row);
         if (antigo.etapa !== row.etapa) await S.insert('atividades', { prospect_id: id, tipo: 'etapa', canal: '', texto: 'De ' + BC.nomeEtapa(antigo.etapa) + ' para ' + BC.nomeEtapa(row.etapa) });
       } else {
-        row.etapa_max = idx(row.etapa) >= 0 ? row.etapa : 'novo'; row.toques = 0; row.motivo_perda = row.motivo_perda || ''; row.meta_lead_id = '';
+        row.etapa_max = idx(row.etapa) >= 0 ? row.etapa : 'novo'; row.toques = 0; row.motivo_perda = row.motivo_perda || ''; row.meta_lead_id = null;
         await S.insert('prospects', row);
       }
       BC.ui.novoAberto = false;
@@ -2028,7 +2028,7 @@ window.BC_CONFIG = {
       var lista = await S.insert('listas', { nome: BC.txt(r.d.lista) || 'Importação', nicho: BC.txt(r.d.nicho), cidade: BC.txt(r.d.cidade) });
       var agoraIso = agora();
       var linhas = r.novos.map(function (p) {
-        return Object.assign({ lista_id: lista.id, origem: 'lista', campanha: '', meta_lead_id: '', canal: r.d.canal || 'whatsapp', etapa: 'novo', etapa_max: 'novo', toques: 0, proxima_data: null, proxima_acao: '', abordagem: '', diagnostico: '', motivo_perda: '', cliente_id: null, atualizado_em: agoraIso }, p);
+        return Object.assign({ lista_id: lista.id, origem: 'lista', campanha: '', meta_lead_id: null, canal: r.d.canal || 'whatsapp', etapa: 'novo', etapa_max: 'novo', toques: 0, proxima_data: null, proxima_acao: '', abordagem: '', diagnostico: '', motivo_perda: '', cliente_id: null, atualizado_em: agoraIso }, p);
       });
       await S.insertMany('prospects', linhas);
       BC.fechar(form);
