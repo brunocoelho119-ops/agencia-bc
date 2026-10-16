@@ -431,6 +431,11 @@ body.arrastando-cartao { -webkit-user-select: none; user-select: none; cursor: g
 body.arrastando-cartao * { cursor: grabbing !important; }
 @media (max-width: 640px) { body.arrastando-cartao .quadro { scroll-snap-type: none; } }
 
+/* seleção em massa na lista do CRM */
+.sel-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: 0 0 10px; min-height: 32px; }
+.tabela th.sel, .tabela td.sel { width: 34px; padding-right: 8px; cursor: pointer; }
+.tabela td.sel input, .tabela th.sel input { accent-color: var(--accent); width: 17px; height: 17px; cursor: pointer; pointer-events: none; }
+
 </style>
 </head>
 <body>
@@ -937,6 +942,12 @@ window.BC_CONFIG = {
       this.d[t] = this.d[t].filter(function (r) { return r.id !== id; });
       this.grava(t);
       return Promise.resolve();
+    },
+    removeMany: function (t, ids) {
+      var set = {}; ids.forEach(function (i) { set[i] = 1; });
+      this.d[t] = this.d[t].filter(function (r) { return !set[r.id]; });
+      this.grava(t);
+      return Promise.resolve();
     }
   };
 
@@ -979,6 +990,14 @@ window.BC_CONFIG = {
     async remove(t, id) {
       await adapter.remove(t, id);
       cache[t] = cache[t].filter(function (r) { return r.id !== id; });
+      emite();
+    },
+    // apaga vários de uma vez (uma chamada por lote, não uma por registro)
+    async removeMany(t, ids) {
+      if (!ids.length) return;
+      await adapter.removeMany(t, ids);
+      var set = {}; ids.forEach(function (i) { set[i] = 1; });
+      cache[t] = cache[t].filter(function (r) { return !set[r.id]; });
       emite();
     },
     // configurações: pares chave/valor guardados na tabela configuracoes
@@ -1108,6 +1127,12 @@ window.BC_CONFIG = {
     async remove(t, id) {
       var r = await sb.from(t).delete().eq('id', id);
       if (r.error) throw r.error;
+    },
+    async removeMany(t, ids) {
+      for (var i = 0; i < ids.length; i += 100) {
+        var r = await sb.from(t).delete().in('id', ids.slice(i, i + 100));
+        if (r.error) throw r.error;
+      }
     }
   };
   root.BCSupabase = A;
@@ -2513,15 +2538,26 @@ window.BC_CONFIG = {
     });
     return out + '</div>';
   }
+  function selecionados(todos) {
+    var sel = BC.ui.sel || (BC.ui.sel = {});
+    return todos.filter(function (p) { return sel[p.id]; });
+  }
   function lista(h, todos) {
     if (!todos.length) return '<p class="vazio">Nenhum contato com esses filtros.</p>';
     todos = todos.slice().sort(function (a, b) { return (b.atualizado_em || b.created_at || '') < (a.atualizado_em || a.created_at || '') ? -1 : 1; });
-    return '<div class="rolagem"><table class="tabela"><thead><tr><th>Contato</th><th class="hide-s">Telefone</th><th class="hide-s">Origem</th><th>Etapa</th><th>Próxima etapa</th><th class="num hide-s">Toques</th></tr></thead><tbody>' +
+    var sel = BC.ui.sel || (BC.ui.sel = {}), n = selecionados(todos).length, tudo = n === todos.length;
+    var barra = '<div class="sel-bar">' + (n
+      ? '<span><strong>' + n + '</strong> ' + (n === 1 ? 'selecionado' : 'selecionados') + '</span>' +
+        (tudo ? '' : '<button type="button" class="btn mini" data-act="sel-todos">Selecionar todos (' + todos.length + ')</button>') +
+        '<button type="button" class="btn mini perigo" data-act="apagar-sel">Apagar selecionados</button>' +
+        '<button type="button" class="btn mini fantasma" data-act="sel-limpar">Limpar seleção</button>'
+      : '<span class="faint small">Marque os contatos que quer apagar, ou</span><button type="button" class="btn mini" data-act="sel-todos">Selecionar todos (' + todos.length + ')</button>') + '</div>';
+    return barra + '<div class="rolagem"><table class="tabela"><thead><tr><th class="sel" data-act="sel-todos" title="Selecionar todos"><input type="checkbox" tabindex="-1" aria-label="Selecionar todos"' + (tudo ? ' checked' : '') + '></th><th>Contato</th><th class="hide-s">Telefone</th><th class="hide-s">Origem</th><th>Etapa</th><th>Próxima etapa</th><th class="num hide-s">Toques</th></tr></thead><tbody>' +
       todos.slice(0, 300).map(function (p) {
-        return '<tr class="clicavel" data-act="abrir-prospect" data-id="' + esc(p.id) + '"><td><div class="nome">' + esc(titulo(p)) + '</div><div class="small faint">' + esc(sub(p)) + '</div></td>' +
+        return '<tr class="clicavel" data-act="abrir-prospect" data-id="' + esc(p.id) + '"><td class="sel" data-act="sel-pros" data-id="' + esc(p.id) + '"><input type="checkbox" tabindex="-1" aria-label="Selecionar ' + esc(titulo(p)) + '"' + (sel[p.id] ? ' checked' : '') + '></td><td><div class="nome">' + esc(titulo(p)) + '</div><div class="small faint">' + esc(sub(p)) + '</div></td>' +
           '<td class="hide-s nowrap mono small">' + esc(p.telefone || '—') + '</td><td class="hide-s">' + esc(ORIGEM_NOME[p.origem] || p.origem) + '</td>' +
           '<td><span class="tag">' + esc(BC.nomeEtapa(p.etapa)) + '</span></td><td>' + (quando(p, h) || '<span class="faint">—</span>') + (p.proxima_acao ? ' <span class="small muted">' + esc(p.proxima_acao) + '</span>' : '') + '</td><td class="num hide-s">' + (p.toques || 0) + '</td></tr>';
-      }).join('') + '</tbody></table></div><p class="small faint" style="margin-top:6px">' + todos.length + ' contatos.</p>';
+      }).join('') + '</tbody></table></div><p class="small faint" style="margin-top:6px">' + todos.length + ' contatos' + (todos.length > 300 ? ' (mostrando os 300 mais recentes; "Selecionar todos" pega todos os ' + todos.length + ')' : '') + '.</p>';
   }
 
   // ───────── funil ─────────
@@ -2619,6 +2655,7 @@ window.BC_CONFIG = {
         return '<label><input type="radio" name="vista" value="' + v[0] + '"' + (u.pVista === v[0] ? ' checked' : '') + ' data-change="pros-vista"><span style="width:auto;padding:0 14px;font-family:var(--f-body);font-weight:700">' + v[1] + '</span></label>';
       }).join('') + '</span>' +
       '<span class="barra-fer-fim"><button class="btn" data-act="importar">Importar planilha</button><button class="btn" data-act="exportar-csv">Exportar CSV</button>' +
+      (todos.length ? '<button class="btn perigo" data-act="apagar-todos">Apagar todos</button>' : '') +
       (S.temExemplos() ? '<button class="btn fantasma" data-act="limpar-exemplos">Limpar exemplos</button>' : '<button class="btn fantasma" data-act="carregar-exemplos">Exemplo</button>') + '</span></div>';
 
     if (u.novoAberto) out += formNovo();
@@ -2649,6 +2686,57 @@ window.BC_CONFIG = {
     if (f) { if (f.scrollIntoView) f.scrollIntoView({ block: 'center', behavior: 'smooth' }); var i = document.getElementById('nc-nome'); if (i) i.focus({ preventScroll: true }); }
   };
   BC.act['cancelar-novo'] = function () { BC.ui.novoAberto = false; BC.render(); };
+
+  // ───────── apagar contatos em massa ─────────
+  function refrescaLista() {
+    var alvo = document.getElementById('vista-pros');
+    if (alvo && BC.ui.pVista === 'lista') alvo.innerHTML = lista(C.hoje(), filtrar(S.all('prospects')));
+  }
+  BC.act['sel-pros'] = function (el) {
+    var sel = BC.ui.sel || (BC.ui.sel = {}), id = el.dataset.id;
+    if (sel[id]) delete sel[id]; else sel[id] = true;
+    refrescaLista();
+  };
+  BC.act['sel-todos'] = function () {
+    var vis = filtrar(S.all('prospects')), sel = BC.ui.sel || (BC.ui.sel = {});
+    if (selecionados(vis).length === vis.length) vis.forEach(function (p) { delete sel[p.id]; });
+    else vis.forEach(function (p) { sel[p.id] = true; });
+    refrescaLista();
+  };
+  BC.act['sel-limpar'] = function () { BC.ui.sel = {}; refrescaLista(); };
+
+  function abrirApagar(modo) {
+    var todos = S.all('prospects'), alvo = modo === 'todos' ? todos : selecionados(filtrar(todos));
+    if (!alvo.length) { BC.toast('Nenhum contato selecionado.', true); return; }
+    var n = alvo.length, txt = n === 1 ? '1 contato' : n + ' contatos';
+    var html = '<form class="dlg" data-form="apagar-prospects" data-modo="' + modo + '">' + BC.cabDialogo('Apagar ' + txt + '?', modo === 'todos' ? 'Todos os contatos do CRM' : 'Os contatos que você marcou na lista') +
+      '<p style="margin:0 0 8px">Isso apaga ' + (n === 1 ? 'o contato' : 'os contatos') + ' e o histórico de toques. <strong>Não dá para desfazer.</strong> Clientes que você já fechou continuam na carteira.</p>' +
+      '<p class="small muted" style="margin:0 0 12px">Quer guardar uma cópia antes? Feche esta janela e use "Exportar CSV".</p>' +
+      (modo === 'todos' ? '<div class="campo"><label for="ap-conf">Para confirmar, digite APAGAR</label><input id="ap-conf" name="conf" autocomplete="off" placeholder="APAGAR"></div>' : '') +
+      '<p class="erro-form" hidden role="alert"></p>' +
+      '<div class="dlg-rodape"><button type="button" class="btn" data-act="fechar">Cancelar</button><button type="submit" class="btn perigo">Apagar ' + txt + '</button></div></form>';
+    BC.dialogo(html, { estreito: true });
+  }
+  BC.act['apagar-sel'] = function () { abrirApagar('sel'); };
+  BC.act['apagar-todos'] = function () { abrirApagar('todos'); };
+  BC.forms['apagar-prospects'] = function (form) {
+    var modo = form.dataset.modo, d = BC.dados(form);
+    if (modo === 'todos' && String(d.conf || '').trim().toUpperCase() !== 'APAGAR') {
+      var er = form.querySelector('.erro-form'); er.textContent = 'Digite APAGAR para confirmar.'; er.hidden = false; return;
+    }
+    var todos = S.all('prospects'), alvo = modo === 'todos' ? todos : selecionados(filtrar(todos));
+    var ids = alvo.map(function (p) { return p.id; });
+    BC.seguro(async function () {
+      var set = {}; ids.forEach(function (i) { set[i] = 1; });
+      await S.removeMany('atividades', S.all('atividades').filter(function (a) { return set[a.prospect_id]; }).map(function (a) { return a.id; }));
+      await S.removeMany('prospects', ids);
+      // listas que ficaram sem nenhum contato saem junto
+      var vivas = {}; S.all('prospects').forEach(function (p) { if (p.lista_id) vivas[p.lista_id] = 1; });
+      await S.removeMany('listas', S.all('listas').filter(function (l) { return !vivas[l.id]; }).map(function (l) { return l.id; }));
+      BC.ui.sel = {}; BC.ui.pLista = '';
+      BC.fechar(form); BC.toast(ids.length === 1 ? 'Contato apagado.' : ids.length + ' contatos apagados.');
+    }, form);
+  };
 
   BC.act['exportar-csv'] = function () {
     var cols = [['nome', 'Nome'], ['negocio', 'Negócio'], ['nicho', 'Nicho'], ['cidade', 'Cidade'], ['estado', 'Estado'], ['telefone', 'Telefone'], ['email', 'E-mail'], ['instagram', 'Instagram'], ['origem', 'Origem'], ['canal', 'Canal'], ['etapa', 'Etapa'], ['toques', 'Toques'], ['proxima_data', 'Próxima etapa'], ['notas', 'Notas']];
