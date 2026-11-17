@@ -9,42 +9,48 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Agência BC">
 <title>Agência BC</title>
+<meta name="theme-color" content="#0B1F3A">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* Agência BC · quadro de controle.
    Layout: barra fixa com abas; conteúdo em blocos separados por filete (não em cartões);
    tabelas densas; o farol (verde/amarelo/vermelho, sempre com texto) é o sinal principal. */
 :root {
-  /* Paleta da identidade Bruno Coelho: preto, lima e azul. Escuro é o padrão da marca. */
-  --bg: #08090C;
-  --surface: #111319;
-  --surface-2: #1A1D25;
-  --ink: #F4F4F0;
-  --ink-2: #A3A5AE;
-  --ink-3: #80838D;
-  --line: #262932;
-  --accent: #C6FF3D;
-  --accent-ink: #0A0D02;
-  --accent-soft: #171C08;
-  --blue: #3D5CFF;
-  --blue-txt: #7F95FF;
-  --ok: #4CC38A;      --ok-soft: #10281C;
-  --warn: #E3B341;    --warn-soft: #2F2509;
-  --bad: #FF7A70;     --bad-soft: #351513;
-  --f-display: 'Anton', 'Arial Narrow', Impact, sans-serif;
+  /* Identidade "Bruno Coelho · do anúncio à agenda": off-white, navy, azul e coral. Claro é o padrão. */
+  --bg: #F7F5F0;
+  --surface: #FFFFFF;
+  --surface-2: #EEF2F9;
+  --ink: #1C2330;
+  --ink-2: #5A6476;
+  --ink-3: #7A8496;
+  --navy: #0B1F3A;
+  --line: rgba(11, 31, 58, 0.12);
+  --line-strong: rgba(11, 31, 58, 0.22);
+  --accent: #1D4ED8;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #DCE6F7;
+  --coral: #FF6A3D; --coral-hover: #FF805A; --coral-ink: #F7F5F0;
+  --blue: #1D4ED8;
+  --blue-txt: #1D4ED8;
+  --ok: #15803D;      --ok-soft: #DCF2E3;
+  --warn: #A16207;    --warn-soft: #FBEFD2;
+  --bad: #B42318;     --bad-soft: #FCE4DC;
+  --f-display: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --f-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
-  --f-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
-  --raio: 0px;
-  color-scheme: dark;
-}
-:root[data-theme="light"] {
-  --bg: #F4F4F0; --surface: #FFFFFF; --surface-2: #E9E9E3; --ink: #08090C; --ink-2: #4A4C55; --ink-3: #6B6D76;
-  --line: #D4D4CC; --accent: #3D5CFF; --accent-ink: #FFFFFF; --accent-soft: #E3E8FF;
-  --blue: #3D5CFF; --blue-txt: #3D5CFF;
-  --ok: #1B7F4B; --ok-soft: #DCF0E4; --warn: #8F5B00; --warn-soft: #F7EACB; --bad: #B3261E; --bad-soft: #F8DEDB;
+  --f-mono: 'Inter', system-ui, sans-serif;
+  --raio: 10px;
+  --raio-g: 14px;
   color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --bg: #0B1F3A; --surface: #13294A; --surface-2: #1A3358; --ink: #F7F5F0; --ink-2: #A9B8D3; --ink-3: #8293B3;
+  --navy: #F7F5F0; --line: rgba(247, 245, 240, 0.14); --line-strong: rgba(247, 245, 240, 0.24);
+  --accent: #7FA6FF; --accent-ink: #0B1F3A; --accent-soft: #16305A;
+  --blue: #7FA6FF; --blue-txt: #7FA6FF;
+  --ok: #4ADE80; --ok-soft: #12321F; --warn: #FBBF24; --warn-soft: #33290B; --bad: #FF8A6B; --bad-soft: #3A1B16;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -472,6 +478,87 @@ body.arrastando-cartao * { cursor: grabbing !important; }
 .dos-lista { margin: 0; padding-left: 18px; font-size: 13px; display: flex; flex-direction: column; gap: 3px; overflow-wrap: anywhere; }
 .chip.fonte-trafego { border-color: var(--accent); color: var(--accent); }
 .chip.fonte-minerador { border-color: var(--ok); color: var(--ok); }
+
+
+/* ═════════════ IDV "do anúncio à agenda" (teste) · sobrepõe o estilo anterior ═════════════ */
+body { font-size: 15px; -webkit-font-smoothing: antialiased; }
+h1 { font-family: var(--f-display); font-weight: 800; text-transform: none; letter-spacing: -0.025em; line-height: 1.08; color: var(--navy); font-size: clamp(28px, 4.4vw, 42px); }
+h2 { font-family: var(--f-body); font-size: 12px; font-weight: 600; letter-spacing: 0.12em; color: var(--accent); }
+h2::before { width: 18px; height: 2px; border-radius: 2px; }
+h3 { font-family: var(--f-display); font-weight: 700; color: var(--navy); }
+a { color: var(--accent); }
+:root[data-theme="light"] a { color: var(--accent); }
+
+/* barra superior e marca */
+.topbar { background: rgba(247, 245, 240, .9); }
+:root[data-theme="dark"] .topbar { background: rgba(11, 31, 58, .9); }
+.marca-sigla, .marca-bc { width: 40px; height: 40px; border-radius: 11px; background: #0B1F3A; color: #F7F5F0; border: 0; display: grid; place-items: center; position: relative; flex: none;
+  font-family: var(--f-display); font-weight: 800; font-size: 15px; letter-spacing: -0.02em; padding: 0; }
+.marca-sigla::after, .marca-bc::after { content: ""; position: absolute; right: 7px; bottom: 7px; left: auto; width: 6px; height: 6px; margin: 0; border-radius: 50%; background: var(--coral); box-shadow: none; }
+:root[data-theme="dark"] .marca-bc { background: #F7F5F0; color: #0B1F3A; }
+.marca-txt { display: flex; flex-direction: column; line-height: 1.15; }
+.marca-nome { font-family: var(--f-display); font-weight: 800; font-size: 16px; letter-spacing: -0.01em; text-transform: none; color: var(--navy); }
+.marca-tag { font-size: 12px; color: var(--ink-2); }
+.nav a { text-transform: none; letter-spacing: 0; font-size: 14px; font-weight: 500; }
+.nav a[aria-current="page"] { color: var(--navy); font-weight: 600; border-bottom-color: var(--accent); }
+
+/* botões: o principal é o coral da página */
+.btn { border-radius: var(--raio); border-color: var(--line-strong); }
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.primario, .btn-av { background: var(--coral); border-color: var(--coral); color: var(--coral-ink); font-weight: 700; letter-spacing: 0; border-radius: var(--raio); }
+.btn.primario:hover, .btn-av:hover { background: var(--coral-hover); border-color: var(--coral-hover); color: var(--coral-ink); filter: none; box-shadow: none; transform: translateY(-1px); }
+.btn.fantasma { border-color: transparent; }
+.btn.fantasma:hover { background: var(--surface-2); color: var(--accent); }
+.btn.perigo:hover { color: var(--bad); border-color: var(--bad); }
+input, select, textarea { border-radius: var(--raio) !important; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29, 78, 216, .15); outline: none; }
+
+/* superfícies arredondadas, como os cards da página */
+.bloco { border-top: 0; }
+.kpi, .novo-contato, .pra-hoje, .sdr-faixa, .gv-sdr, .aviso, .toast, .dica, .col, .ico-c { border-radius: var(--raio-g); }
+.cartao { border-radius: 12px; }
+.cartao:hover, .cartao:focus-visible { border-color: var(--accent); box-shadow: 0 8px 22px -14px rgba(11, 31, 58, .35); }
+.kpi { border-color: var(--line); }
+.kpi .val, .faixa .val, .resumo-pros .val, .notaviva .grande, .sdr-itens .val { font-family: var(--f-display); font-weight: 800; letter-spacing: -0.02em; color: var(--navy); }
+.kpi.dest { background: #0B1F3A; border-color: #0B1F3A; }
+.kpi.dest .rot { color: #A9B8D3; } .kpi.dest .val { color: var(--coral); }
+:root[data-theme="dark"] .kpi.dest { background: #F7F5F0; border-color: #F7F5F0; } :root[data-theme="dark"] .kpi.dest .rot { color: #5A6476; }
+.pra-hoje { border-color: var(--line); overflow: hidden; }
+.ph-cab { background: #0B1F3A; color: #F7F5F0; letter-spacing: .1em; }
+.pill-marca { background: transparent; color: var(--accent); padding: 0; letter-spacing: .12em; font-weight: 600; display: inline-flex; align-items: center; gap: 10px; }
+.pill-marca::before { content: ""; width: 18px; height: 2px; border-radius: 2px; background: currentColor; }
+.losango { width: 8px; height: 8px; border-radius: 50%; transform: none; background: var(--coral); }
+.marca-texto { background: none; color: var(--accent); padding: 0; }
+.pros-h1 { text-transform: none; line-height: 1.06; }
+.col-cab span { background: var(--accent-soft); color: var(--accent); border-radius: 20px; }
+.seg label:has(input:checked) span, .seg input:checked + span { background: var(--accent); color: var(--accent-ink); }
+.nc-mais { border-radius: 10px; background: var(--accent-soft); color: var(--accent); }
+.chip, .tag { border-radius: 20px; }
+.chip.hoje { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.pill { border-radius: 20px; }
+.pill::before { border-radius: 50%; transform: none; }
+.progresso, .progresso > i, .barra .trilho, .barra .trilho i { border-radius: 4px; }
+.curva, .legenda i { border-radius: 6px; }
+dialog { border-radius: var(--raio-g); border-color: var(--line); }
+dialog::backdrop { background: rgba(11, 31, 58, .55); }
+dialog.gaveta { border-radius: var(--raio-g) 0 0 var(--raio-g); }
+.gv-cab { border-bottom: 1px solid var(--line); background: var(--surface); }
+.gv-cab h3 { font-family: var(--f-display); }
+.gv-sdr { background: var(--surface-2); border-color: transparent; }
+.msg.env .bolha { background: var(--accent-soft); }
+.msg.rec .bolha { background: #fff; border: 1px solid var(--line); }
+:root[data-theme="dark"] .msg.rec .bolha { background: var(--surface-2); }
+.conversa { background: #E7DDD2; border-radius: var(--raio-g); padding: 12px; }
+:root[data-theme="dark"] .conversa { background: #081629; }
+.toast.erro { color: #fff; }
+@media (max-width: 640px) { .marca-tag { display: none; } dialog, dialog.gaveta { border-radius: 0; } }
+/* coral só na ação principal da tela; botões repetidos em listas e cartões ficam navy/azul, como na página */
+li .btn.primario, .ph-corpo .btn.primario, .tabela .btn.primario { background: #0B1F3A; border-color: #0B1F3A; color: #F7F5F0; }
+li .btn.primario:hover, .ph-corpo .btn.primario:hover, .tabela .btn.primario:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+:root[data-theme="dark"] li .btn.primario, :root[data-theme="dark"] .ph-corpo .btn.primario, :root[data-theme="dark"] .tabela .btn.primario { background: var(--accent); border-color: var(--accent); color: #0B1F3A; }
+.btn-av { background: var(--accent-soft); border-color: var(--accent-soft); color: var(--accent); border-radius: 8px; }
+.btn-av:hover { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+:root[data-theme="dark"] .ph-cab { background: #081629; }
 
 </style>
 </head>
@@ -3322,11 +3409,11 @@ window.BC_CONFIG = {
   // Espaço da logo: coloque o arquivo em assets/ e informe o caminho em LOGO (js/config.js). Vazio = espaço reservado.
   function logo() {
     var l = root.BC_CONFIG && root.BC_CONFIG.LOGO;
-    return l ? '<img class="marca-logo" src="' + esc(l) + '" alt="Logo">' : '<span class="marca-logo vazio" aria-hidden="true"></span>';
+    return l ? '<img class="marca-logo" src="' + esc(l) + '" alt="Logo">' : '<span class="marca-bc" aria-hidden="true">BC</span>';
   }
   function barra(nav) {
     var sup = S.modo() === 'supabase';
-    return '<header class="topbar"><div class="topbar-in"><a class="marca" href="#painel">' + logo() + '<span class="marca-nome">Agência BC</span></a>' +
+    return '<header class="topbar"><div class="topbar-in"><a class="marca" href="#painel">' + logo() + '<span class="marca-txt"><span class="marca-nome">Bruno Coelho</span><span class="marca-tag">Agência BC · do anúncio à agenda</span></span></a>' +
       '<div class="topbar-acoes">' + (sup ? '<button class="btn mini fantasma" data-act="sair">Sair</button>' : '<span class="tag" title="Os dados ficam só neste navegador até ligarmos o Supabase">modo local</span>') +
       '<button class="btn mini fantasma" data-act="tema" aria-label="Alternar tema">Tema</button></div></div>' +
       '<nav class="nav" aria-label="Seções">' + ROTAS.map(function (r) { return '<a href="#' + r[0] + '"' + (r[0] === nav ? ' aria-current="page"' : '') + '>' + r[1] + '</a>'; }).join('') + '</nav></header>';
@@ -3345,10 +3432,9 @@ window.BC_CONFIG = {
 
   function tema() {
     var r = document.documentElement, atual = r.getAttribute('data-theme');
-    var escuro = atual !== 'light';
-    var novo = escuro ? 'light' : 'dark';
+    var novo = atual === 'dark' ? 'light' : 'dark';   // claro é o padrão da nova identidade
     r.setAttribute('data-theme', novo);
-    try { localStorage.setItem('bc:tema', novo); } catch (e) { /* ok */ }
+    try { localStorage.setItem('bc:tema-idv', novo); } catch (e) { /* ok */ }
   }
   BC.act['fechar'] = function (el) { BC.fechar(el); };
   BC.act['tema'] = tema;
@@ -3410,7 +3496,7 @@ window.BC_CONFIG = {
   }
 
   async function iniciar() {
-    try { var t = localStorage.getItem('bc:tema'); if (t) document.documentElement.setAttribute('data-theme', t); } catch (e) { /* ok */ }
+    try { var t = localStorage.getItem('bc:tema-idv'); if (t) document.documentElement.setAttribute('data-theme', t); } catch (e) { /* ok */ }
     try { await S.init(); }
     catch (e) {
       if (e.precisaLogin) return telaLogin();
