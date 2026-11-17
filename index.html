@@ -466,6 +466,12 @@ body.arrastando-cartao * { cursor: grabbing !important; }
 .msg.env .bolha { background: var(--accent-soft); color: var(--ink); border-bottom-right-radius: 3px; }
 .msg.sis { align-self: center; max-width: 100%; font-size: 12px; color: var(--ink-2); text-align: center; }
 @media (max-width: 600px) { .sdr-dados { grid-template-columns: 1fr; } }
+.dossie .dos-sec + .dos-sec { margin-top: 10px; }
+.dossie h3 { margin: 0 0 4px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.dossie p { margin: 0 0 4px; overflow-wrap: anywhere; }
+.dos-lista { margin: 0; padding-left: 18px; font-size: 13px; display: flex; flex-direction: column; gap: 3px; overflow-wrap: anywhere; }
+.chip.fonte-trafego { border-color: var(--accent); color: var(--accent); }
+.chip.fonte-minerador { border-color: var(--ok); color: var(--ok); }
 
 </style>
 </head>
@@ -1397,7 +1403,7 @@ window.BC_CONFIG = {
   BC.act = {};      // ações disparadas por data-act="..."
   BC.forms = {};    // formulários com data-form="..."
   BC.views = {};    // telas
-  BC.ui = { filtroRisco: false, abaPros: 'hoje', pVista: 'quadro', novoAberto: false, pEtapa: '', pEstado: '', pOrigem: '', pLista: '', pBusca: '', pSdr: '' };
+  BC.ui = { filtroRisco: false, abaPros: 'hoje', pVista: 'quadro', novoAberto: false, pEtapa: '', pEstado: '', pOrigem: '', pLista: '', pBusca: '', pSdr: '', pFonte: '' };
 
   // ───────────── formatação ─────────────
   BC.esc = function (s) {
@@ -1647,6 +1653,25 @@ window.BC_CONFIG = {
   function fmtDia(d) { try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(d); } catch (e) { return C.toISO(d); } }
   function hhmm(d) { return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
 
+  // ───────────── de onde veio o contato: tráfego, Minerador ou cadastro manual ─────────────
+  // O banco só tem `origem` (lista | meta_ads | indicacao | outro): o Minerador, a importação e o cadastro manual
+  // gravam todos "lista". A diferença sai dos dados: o Minerador deixa rastro (ângulo, observação da IA, gancho,
+  // dossiê, nota do Google); a importação tem lista mas sem esse rastro; o manual não tem lista.
+  var FONTES = [['trafego', 'Tráfego pago'], ['minerador', 'Minerador'], ['importado', 'Lista importada'], ['manual', 'Manual'], ['indicacao', 'Indicação'], ['outro', 'Outro']];
+  SDR.fonteNome = function (id) { var f = FONTES.filter(function (x) { return x[0] === id; })[0]; return f ? f[1] : id; };
+  SDR.fontes = FONTES;
+  SDR.fonte = function (p) {
+    if (p.origem === 'meta_ads' || p.meta_lead_id) return 'trafego';
+    if (p.origem === 'indicacao') return 'indicacao';
+    if (p.origem === 'outro') return 'outro';
+    if (p.angulo_abordagem || p.observacao_ia || p.gancho || p.enriquecimento || p.nota_google != null) return 'minerador';
+    return p.lista_id ? 'importado' : 'manual';
+  };
+  SDR.fonteChip = function (p) {
+    var f = SDR.fonte(p), tip = { trafego: 'Entrou por campanha de tráfego pago' + (p.campanha ? ': ' + p.campanha : ''), minerador: 'Minerado e abordado pelo agente', importado: 'Veio de planilha importada', manual: 'Cadastrado à mão', indicacao: 'Indicação', outro: 'Outra origem' }[f];
+    return '<span class="chip fonte-' + f + '" title="' + esc(tip) + '">' + esc(SDR.fonteNome(f)) + '</span>';
+  };
+
   // ───────────── estado de cada contato ─────────────
   SDR.ativo = function () { return S.modo() === 'supabase'; };
   SDR.limite = function () { var c = S.cfg('sdr', null); return (c && Number(c.limite_diario)) || 10; };
@@ -1662,8 +1687,9 @@ window.BC_CONFIG = {
     return out;
   };
   SDR.linha = function (p) {   // linha de selos para cartões e listas
-    var b = SDR.badge(p), sc = p.score ? '<span class="chip" title="Pontuação de prioridade na fila do bot">score ' + p.score + '</span>' : '';
-    return (b || sc) ? '<div class="linha">' + b + sc + '</div>' : '';
+    var b = SDR.badge(p), sc = p.score ? '<span class="chip" title="Pontuação de prioridade na fila do bot">score ' + p.score + '</span>' : '',
+      an = SDR.anuncia(p) ? '<span class="chip acc" title="Anúncios ativos na Biblioteca da Meta: a abordagem é segunda opinião">já anuncia</span>' : '';
+    return (b || sc || an) ? '<div class="linha">' + b + sc + an + '</div>' : '';
   };
 
   // sdr_status que acompanha uma mudança manual de etapa (só no modo Supabase, onde o bot existe)
@@ -1676,16 +1702,23 @@ window.BC_CONFIG = {
   // ───────────── filtro ─────────────
   SDR.passa = function (p, f) {
     if (f === 'fila') return SDR.naFila(p);
+    if (f === 'anuncia') return SDR.anuncia(p);
     if (f === 'pausado') return SDR.pausado(p) || p.sdr_status === 'humano_assumiu';
     return p.sdr_status === f;
   };
   SDR.filtro = function () {
     if (!SDR.ativo()) return '';
-    var v = BC.ui.pSdr, op = [['', 'Todo o SDR'], ['fila', 'Na fila do bot'], ['pausado', 'Você assumiu / pausado']];
+    var v = BC.ui.pSdr, op = [['', 'Todo o SDR'], ['fila', 'Na fila do bot'], ['anuncia', 'Já anunciam na Meta'], ['pausado', 'Você assumiu / pausado']];
     ['mensagem_enviada', 'respondeu', 'qualificando', 'reuniao_marcada', 'follow_up_1', 'follow_up_2', 'perdido', 'opt_out', 'sem_whatsapp', 'erro_envio'].forEach(function (k) { op.push([k, ROTULO[k]]); });
     return '<select data-change="filtro-pros" data-filtro="pSdr" aria-label="Status do SDR">' + op.map(function (o) {
       return '<option value="' + o[0] + '"' + (v === o[0] ? ' selected' : '') + '>' + esc(o[1]) + '</option>';
     }).join('') + '</select>';
+  };
+
+  SDR.filtroFonte = function () {
+    var v = BC.ui.pFonte || '';
+    return '<select data-change="filtro-pros" data-filtro="pFonte" aria-label="De onde veio">' + [['', 'Todas as fontes']].concat(FONTES).map(function (o) {
+      return '<option value="' + o[0] + '"' + (v === o[0] ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('') + '</select>';
   };
 
   // ───────────── resumo do dia ─────────────
@@ -1715,6 +1748,36 @@ window.BC_CONFIG = {
       '</div></section>';
   };
 
+  // ───────────── o que o Minerador encontrou (gancho + dossiê) ─────────────
+  var FONTE = { instagram: 'Instagram', site: 'Site', avaliacoes: 'Avaliações no Google', anuncios: 'Anúncios', google: 'Google' };
+  function limpo(t) {   // textos vindos do Maps/site trazem <br> e entidades HTML
+    var m = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+    return String(t == null ? '' : t).replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, '')
+      .replace(/&#(\d+);/g, function (_, n) { return String.fromCharCode(Number(n)); })
+      .replace(/&([a-z]+);/gi, function (x, k) { return m[k.toLowerCase()] != null ? m[k.toLowerCase()] : x; }).trim();
+  }
+  function enriq(p) { var e = p.enriquecimento; if (typeof e === 'string') { try { e = JSON.parse(e); } catch (x) { e = null; } } return e && typeof e === 'object' ? e : null; }
+  SDR.anuncia = function (p) { return p.anuncia_meta === true; };
+  SDR.dossie = function (p) {
+    var e = enriq(p); if (!e) return '';
+    var b = '';
+    function sec(t, h) { if (h) b += '<div class="dos-sec"><h3>' + t + '</h3>' + h + '</div>'; }
+    var ig = e.instagram;
+    if (ig) {
+      var u = ig.usuario || ig.username, ps = ig.ultimos_posts || ig.posts || [];
+      sec('Instagram', (u ? '<p><a href="' + esc(BC.igLink(u)) + '" target="_blank" rel="noopener">@' + esc(u) + '</a>' + (ig.seguidores != null ? ' · ' + esc(String(ig.seguidores)) + ' seguidores' : '') + '</p>' : '') +
+        (ig.bio ? '<p class="small">' + esc(limpo(ig.bio)) + '</p>' : '') + (ig.link ? '<p class="small">Link da bio: ' + esc(limpo(ig.link)) + '</p>' : '') +
+        (ps.length ? '<ul class="dos-lista">' + ps.slice(0, 5).map(function (x) { return '<li>' + esc(limpo(typeof x === 'string' ? x : (x.legenda || x.caption || x.texto || ''))) + '</li>'; }).join('') + '</ul>' : ''));
+    }
+    if (e.site && (e.site.titulo || e.site.descricao)) sec('Site', '<p>' + esc(limpo(e.site.titulo)) + '</p>' + (e.site.descricao ? '<p class="small">' + esc(limpo(e.site.descricao)) + '</p>' : ''));
+    if (e.avaliacoes && e.avaliacoes.length) sec('Avaliações recentes', '<ul class="dos-lista">' + e.avaliacoes.slice(0, 5).map(function (a) {
+      return '<li>' + (a.nota ? '<strong>★ ' + esc(String(a.nota)) + '</strong> ' : '') + esc(limpo(a.texto)) + (a.quando ? ' <span class="faint">· ' + esc(a.quando) + '</span>' : '') + '</li>'; }).join('') + '</ul>');
+    var an = e.anuncios;
+    if (an) sec('Anúncios na Meta', '<p>' + (an.verificado === false ? 'Não foi possível verificar.' : an.anuncia ? '<strong>Já anuncia.</strong> O plano deve ser uma segunda opinião, não do zero.' : 'Não encontrei anúncios ativos.') + '</p>' +
+      (an.exemplos && an.exemplos.length ? '<ul class="dos-lista">' + an.exemplos.slice(0, 3).map(function (x) { return '<li>' + esc(limpo(typeof x === 'string' ? x : (x.texto || x.titulo || ''))) + '</li>'; }).join('') + '</ul>' : ''));
+    return b ? '<details class="gv-mais"><summary>O que o agente encontrou' + (e.coletado_em ? ' · ' + BC.dataHora(e.coletado_em) : '') + '</summary><div class="gv-mais-corpo dossie">' + b + '</div></details>' : '';
+  };
+
   // ───────────── ficha do contato (gaveta) ─────────────
   function par(rot, val) { return val ? '<div class="sdr-par"><dt>' + rot + '</dt><dd>' + val + '</dd></div>' : ''; }
   SDR.secao = function (p) {
@@ -1729,7 +1792,9 @@ window.BC_CONFIG = {
     if (st === 'erro_envio') aviso('O envio falhou ' + (p.tentativas_envio || 3) + ' vezes, por isso saiu da fila.', 'warn');
 
     var site = p.site ? '<a href="' + esc(/^https?:\/\//i.test(p.site) ? p.site : 'https://' + p.site) + '" target="_blank" rel="noopener">' + esc(p.site) + '</a>' : '';
-    var dados = par('Score', p.score ? String(p.score) : '') +
+    var dados = par('Gancho da 1ª mensagem', p.gancho ? esc(limpo(p.gancho)) + (p.fonte_gancho ? ' <span class="faint">(' + esc(FONTE[p.fonte_gancho] || p.fonte_gancho) + ')</span>' : '') : '') +
+      par('Anuncia na Meta', p.anuncia_meta === true ? '<strong>Sim</strong>' : p.anuncia_meta === false ? 'Não' : '') +
+      par('Score', p.score ? String(p.score) : '') +
       par('Google', p.nota_google ? '★ ' + BC.n1(Number(p.nota_google)) + (p.avaliacoes ? ' · ' + p.avaliacoes + ' avaliações' : '') : '') +
       par('Site', site) + par('Endereço', esc(p.endereco || '')) +
       par('Ângulo da abordagem', esc(ANGULO[p.angulo_abordagem] || p.angulo_abordagem || '')) +
@@ -1754,7 +1819,7 @@ window.BC_CONFIG = {
       b += '<button type="button" class="btn mini perigo" data-act="sdr-optout" data-id="' + id + '">Marcar opt-out</button>';
     }
     return '<section class="gv-sdr"><div class="gv-sdr-cab"><h2>Agente SDR</h2>' + SDR.badge(p) + '</div>' + av +
-      (dados ? '<dl class="sdr-dados">' + dados + '</dl>' : '') + (b ? '<div class="gv-acoes">' + b + '</div>' : '') + '</section>';
+      (dados ? '<dl class="sdr-dados">' + dados + '</dl>' : '') + SDR.dossie(p) + (b ? '<div class="gv-acoes">' + b + '</div>' : '') + '</section>';
   };
 
   // ───────────── conversa em formato de chat ─────────────
@@ -2173,7 +2238,7 @@ window.BC_CONFIG = {
       campo('pr-proxima_acao', 'O que fazer na próxima etapa', '<input id="pr-proxima_acao" name="proxima_acao" type="text" value="' + esc(p.proxima_acao || '') + '" placeholder="Ex.: Follow-up 1">') +
       campo('pr-notas', 'Anotações da conversa', '<textarea id="pr-notas" name="notas" placeholder="O que ele falou, o que ficou combinado, quando retomar...">' + esc(p.notas || '') + '</textarea>') +
       campo('pr-abordagem', 'Mensagem de abordagem', '<textarea id="pr-abordagem" name="abordagem" placeholder="A mensagem que você vai enviar neste primeiro contato.">' + esc(p.abordagem || '') + '</textarea>') +
-      campo('pr-diagnostico', 'Mini-diagnóstico (entregável)', '<textarea id="pr-diagnostico" name="diagnostico" placeholder="Resumo ou link do mini-diagnóstico, pronto para enviar se ele responder.">' + esc(p.diagnostico || '') + '</textarea>') +
+      campo('pr-diagnostico', 'Plano de campanha (entregável)', '<textarea id="pr-diagnostico" name="diagnostico" placeholder="O plano pronto para enviar se ele responder: objetivo, público, anúncios, teste e métrica.">' + esc(p.diagnostico || '') + '</textarea>') +
       (p.etapa === 'perdido' ? campo('pr-motivo_perda', 'Motivo da perda', '<input id="pr-motivo_perda" name="motivo_perda" type="text" value="' + esc(p.motivo_perda || '') + '">') : '') +
       '<div class="gv-links">' + BC.iconesContato(p) + '</div>' +
       '<details class="gv-mais"><summary>Mais detalhes</summary><div class="gv-mais-corpo">' +
@@ -2187,7 +2252,7 @@ window.BC_CONFIG = {
       (p.cliente_id ? '<a class="btn mini" href="#c-' + esc(p.cliente_id) + '" data-act="fechar-e-ir">Ver cliente</a>' : (p.etapa !== 'fechado' ? '<button type="button" class="btn mini" data-act="converter" data-id="' + esc(id) + '">Converter em cliente</button>' : '')) +
       (p.etapa !== 'perdido' && p.etapa !== 'fechado' ? '<button type="button" class="btn mini fantasma" data-act="perdido" data-id="' + esc(id) + '">Marcar como perdido</button>' : '') + '</div>' +
       BC.sdr.conversa(id) +
-      '<p class="small faint gv-meta">Cadastrado em ' + cad + ' · etapa atual: <strong>' + esc(BC.nomeEtapa(p.etapa)) + '</strong>' + (p.proxima_data ? ' · próxima etapa em ' + BC.dataCurta(p.proxima_data) : '') + '</p>' +
+      '<p class="small faint gv-meta">Origem: <strong>' + esc(BC.sdr.fonteNome(BC.sdr.fonte(p))) + '</strong>' + (p.campanha ? ' · campanha ' + esc(p.campanha) : '') + ' · entrou em ' + (p.created_at ? BC.dataHora(p.created_at) : cad) + ' · etapa atual: <strong>' + esc(BC.nomeEtapa(p.etapa)) + '</strong>' + (p.proxima_data ? ' · próxima etapa em ' + BC.dataCurta(p.proxima_data) : '') + '</p>' +
       '</div>' +
       '<p class="erro-form" hidden role="alert" style="padding:0 20px"></p>' +
       '<div class="gv-rodape"><button type="submit" class="btn primario">Salvar</button>' +
@@ -2520,7 +2585,7 @@ window.BC_CONFIG = {
     var sq = C.sequencia(datas, meta, h);
     var abertos = S.all('prospects').filter(function (p) { return p.etapa !== 'fechado' && p.etapa !== 'perdido'; });
     var devidos = abertos.filter(function (p) { return p.proxima_data && p.proxima_data <= h; });
-    var leadsNovos = abertos.filter(function (p) { return p.origem === 'meta_ads' && p.etapa === 'novo'; });
+    var leadsNovos = abertos.filter(function (p) { return BC.sdr.fonte(p) === 'trafego' && p.etapa === 'novo'; });
 
     var out = '<div class="pagehead"><div><h1>Painel</h1><p class="sub">' + esc(BC.dataLonga(h)) + '</p></div>' +
       '<div class="pagehead-acoes"><button class="btn primario" data-act="checkin">Check-in semanal</button><button class="btn" data-act="novo-cliente">+ Cliente</button></div></div>';
@@ -2898,7 +2963,7 @@ window.BC_CONFIG = {
     return '<div class="cartao" data-act="abrir-prospect" data-id="' + esc(p.id) + '" tabindex="0">' +
       '<div class="t">' + esc(titulo(p)) + '</div>' +
       (sub(p) ? '<div class="d">' + esc(sub(p)) + '</div>' : '') +
-      '<div class="linha">' + quando(p, h) + (p.origem === 'meta_ads' ? '<span class="chip acc">Meta Ads</span>' : '') + (p.toques ? '<span class="chip">' + p.toques + (p.toques === 1 ? ' toque' : ' toques') + '</span>' : '') + '</div>' +
+      '<div class="linha">' + quando(p, h) + BC.sdr.fonteChip(p) + (p.toques ? '<span class="chip">' + p.toques + (p.toques === 1 ? ' toque' : ' toques') + '</span>' : '') + '</div>' +
       (BC.sdr ? BC.sdr.linha(p) : '') +
       '<div class="linha">' + BC.iconesContato(p) + '</div>' +
       (prox ? '<div class="linha"><button type="button" class="btn-av" data-act="avancar" data-id="' + esc(p.id) + '">' + (prox === 'fechado' ? 'fechar cliente' : 'avançar') + ' &rarr;</button></div>' : '') +
@@ -2911,6 +2976,7 @@ window.BC_CONFIG = {
       if (u.pOrigem && p.canal !== u.pOrigem) return false; // pOrigem guarda o canal
       if (u.pEstado && p.estado !== u.pEstado) return false;
       if (u.pSdr && !BC.sdr.passa(p, u.pSdr)) return false;
+      if (u.pFonte && BC.sdr.fonte(p) !== u.pFonte) return false;
       if (q && C.semAcento([p.nome, p.negocio, p.nicho, p.cidade, p.estado, p.telefone, p.instagram, p.email].join(' ')).indexOf(q) < 0) return false;
       return true;
     });
@@ -2945,7 +3011,7 @@ window.BC_CONFIG = {
     return barra + '<div class="rolagem"><table class="tabela"><thead><tr><th class="sel" data-act="sel-todos" title="Selecionar todos"><input type="checkbox" tabindex="-1" aria-label="Selecionar todos"' + (tudo ? ' checked' : '') + '></th><th>Contato</th><th class="hide-s">Telefone</th><th class="hide-s">Origem</th><th>Etapa</th><th>Próxima etapa</th><th class="num hide-s">Toques</th></tr></thead><tbody>' +
       todos.slice(0, 300).map(function (p) {
         return '<tr class="clicavel" data-act="abrir-prospect" data-id="' + esc(p.id) + '"><td class="sel" data-act="sel-pros" data-id="' + esc(p.id) + '"><input type="checkbox" tabindex="-1" aria-label="Selecionar ' + esc(titulo(p)) + '"' + (sel[p.id] ? ' checked' : '') + '></td><td><div class="nome">' + esc(titulo(p)) + '</div><div class="small faint">' + esc(sub(p)) + '</div></td>' +
-          '<td class="hide-s nowrap mono small">' + esc(BC.tel(p.telefone) || '—') + '</td><td class="hide-s">' + esc(ORIGEM_NOME[p.origem] || p.origem) + '</td>' +
+          '<td class="hide-s nowrap mono small">' + esc(BC.tel(p.telefone) || '—') + '</td><td class="hide-s">' + esc(BC.sdr.fonteNome(BC.sdr.fonte(p))) + (p.campanha ? '<div class="small faint">' + esc(p.campanha) + '</div>' : '') + '</td>' +
           '<td><span class="tag">' + esc(BC.nomeEtapa(p.etapa)) + '</span>' + (BC.sdr.badge(p) ? '<div style="margin-top:4px">' + BC.sdr.badge(p) + '</div>' : '') + '</td><td>' + (quando(p, h) || '<span class="faint">—</span>') + (p.proxima_acao ? ' <span class="small muted">' + esc(p.proxima_acao) + '</span>' : '') + '</td><td class="num hide-s">' + (p.toques || 0) + '</td></tr>';
       }).join('') + '</tbody></table></div><p class="small faint" style="margin-top:6px">' + todos.length + ' contatos' + (todos.length > 300 ? ' (mostrando os 300 mais recentes; "Selecionar todos" pega todos os ' + todos.length + ')' : '') + '.</p>';
   }
@@ -2958,10 +3024,10 @@ window.BC_CONFIG = {
       return '<div class="barra"><span>' + esc(e.nome) + '</span><div class="trilho"><i style="width:' + (e.n / total * 100) + '%"></i></div><span class="v">' + e.n + (i > 0 && e.deAnterior != null ? ' · ' + BC.pct(e.deAnterior) : '') + '</span></div>';
     }).join('') + '</div><p class="small faint" style="margin-top:10px">A porcentagem é sobre a etapa anterior. Conta quem já passou por cada etapa, inclusive os perdidos depois.</p></section>';
     out += '<section class="bloco"><div class="bloco-cab"><h2>Por origem</h2></div><div class="rolagem"><table class="tabela"><thead><tr><th>Origem</th><th class="num">Contatos</th><th class="num">Responderam</th><th class="num">Fechados</th><th class="num">Conversão</th></tr></thead><tbody>' +
-      Object.keys(ORIGEM_NOME).map(function (o) {
-        var ps = todos.filter(function (p) { return p.origem === o; }); if (!ps.length) return '';
+      BC.sdr.fontes.map(function (o) {
+        var ps = todos.filter(function (p) { return BC.sdr.fonte(p) === o[0]; }); if (!ps.length) return '';
         var ff = C.funil(ps);
-        return '<tr><td>' + ORIGEM_NOME[o] + '</td><td class="num">' + ps.length + '</td><td class="num">' + ff[2].n + '</td><td class="num">' + ff[6].n + '</td><td class="num">' + BC.pct(ps.length ? ff[6].n / ps.length : null, 1) + '</td></tr>';
+        return '<tr><td>' + o[1] + '</td><td class="num">' + ps.length + '</td><td class="num">' + ff[2].n + '</td><td class="num">' + ff[6].n + '</td><td class="num">' + BC.pct(ps.length ? ff[6].n / ps.length : null, 1) + '</td></tr>';
       }).join('') + '</tbody></table></div></section></div>';
     var perdidos = todos.filter(function (p) { return p.etapa === 'perdido'; }), pm = {};
     perdidos.forEach(function (p) { var k = p.motivo_perda || 'Sem motivo'; pm[k] = (pm[k] || 0) + 1; });
@@ -3000,7 +3066,7 @@ window.BC_CONFIG = {
     var datas = S.all('atividades').filter(function (a) { return a.tipo === 'toque'; }).map(function (a) { return C.dataLocalDe(a.created_at); });
     var sq = C.sequencia(datas, meta, h);
     var abertos = todos.filter(aberto);
-    var leads = abertos.filter(function (p) { return p.origem === 'meta_ads' && p.etapa === 'novo'; });
+    var leads = abertos.filter(function (p) { return BC.sdr.fonte(p) === 'trafego' && p.etapa === 'novo'; });
     var devidos = abertos.filter(function (p) { return p.proxima_data && p.proxima_data <= h && leads.indexOf(p) < 0; })
       .sort(function (a, b) { return a.proxima_data < b.proxima_data ? -1 : 1; });
     var pendentes = leads.concat(devidos);
@@ -3027,9 +3093,9 @@ window.BC_CONFIG = {
     } else {
       out += '<ul class="linhas">' + pendentes.map(function (p) {
         var wa = BC.waLink(p.telefone);
-        return '<li><div class="corpo"><div class="tit">' + esc(titulo(p)) + ' <span class="tag">' + esc(BC.nomeEtapa(p.etapa)) + '</span>' + (p.origem === 'meta_ads' ? ' <span class="chip acc">Meta Ads</span>' : '') + ' ' + BC.sdr.badge(p) + '</div>' +
-          '<div class="det">' + esc(sub(p)) + (sub(p) ? ' · ' : '') + esc(p.proxima_acao || (p.origem === 'meta_ads' ? 'Responder o lead' : 'Follow-up')) + ' ' + quando(p, h) +
-          (p.abordagem ? '' : ' <span class="tag">sem abordagem</span>') + (p.diagnostico ? '' : ' <span class="tag">sem mini-diagnóstico</span>') + '</div></div>' +
+        return '<li><div class="corpo"><div class="tit">' + esc(titulo(p)) + ' <span class="tag">' + esc(BC.nomeEtapa(p.etapa)) + '</span>' + ' ' + BC.sdr.fonteChip(p) + ' ' + BC.sdr.badge(p) + '</div>' +
+          '<div class="det">' + esc(sub(p)) + (sub(p) ? ' · ' : '') + esc(p.proxima_acao || (BC.sdr.fonte(p) === 'trafego' ? 'Responder o lead' : 'Follow-up')) + ' ' + quando(p, h) +
+          (p.abordagem ? '' : ' <span class="tag">sem abordagem</span>') + (p.diagnostico ? '' : ' <span class="tag">sem plano de campanha</span>') + '</div></div>' +
           '<div class="acoes">' + (wa ? '<a class="btn mini" href="' + esc(wa) + '" target="_blank" rel="noopener">WhatsApp</a>' : '') +
           '<button class="btn mini primario" data-act="toque" data-id="' + esc(p.id) + '">Toque</button>' +
           (p.etapa === 'abordado' || p.etapa === 'novo' ? '<button class="btn mini" data-act="respondeu" data-id="' + esc(p.id) + '">Respondeu</button>' : '') +
@@ -3043,7 +3109,7 @@ window.BC_CONFIG = {
       '<input type="search" id="busca-pros" placeholder="Buscar nome, negócio, cidade…" value="' + esc(u.pBusca) + '" data-input="busca-pros" aria-label="Buscar contatos">' +
       '<select data-change="filtro-pros" data-filtro="pEtapa" aria-label="Etapa"><option value="">Todas as etapas</option>' + C.ETAPAS.map(function (e) { return '<option value="' + e.id + '"' + (u.pEtapa === e.id ? ' selected' : '') + '>' + esc(e.nome) + '</option>'; }).join('') + '</select>' +
       '<select data-change="filtro-pros" data-filtro="pOrigem" aria-label="Canal"><option value="">Todos os canais</option>' + CANAIS.map(function (c) { return '<option value="' + c[0] + '"' + (u.pOrigem === c[0] ? ' selected' : '') + '>' + c[1] + '</option>'; }).join('') + '</select>' +
-      estados(todos) + BC.sdr.filtro() + '<span class="seg" role="radiogroup" aria-label="Vista">' + [['quadro', 'Quadro'], ['lista', 'Lista'], ['funil', 'Funil']].map(function (v) {
+      estados(todos) + BC.sdr.filtroFonte() + BC.sdr.filtro() + '<span class="seg" role="radiogroup" aria-label="Vista">' + [['quadro', 'Quadro'], ['lista', 'Lista'], ['funil', 'Funil']].map(function (v) {
         return '<label><input type="radio" name="vista" value="' + v[0] + '"' + (u.pVista === v[0] ? ' checked' : '') + ' data-change="pros-vista"><span style="width:auto;padding:0 14px;font-family:var(--f-body);font-weight:700">' + v[1] + '</span></label>';
       }).join('') + '</span>' +
       '<span class="barra-fer-fim"><button class="btn" data-act="importar">Importar planilha</button><button class="btn" data-act="exportar-csv">Exportar CSV</button>' +
