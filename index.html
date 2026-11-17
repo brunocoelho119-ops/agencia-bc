@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Agência BC">
 <title>Agência BC</title>
-<meta name="theme-color" content="#0B1F3A">
+<meta name="theme-color" content="#1B3350">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -18,25 +18,25 @@
    Layout: barra fixa com abas; conteúdo em blocos separados por filete (não em cartões);
    tabelas densas; o farol (verde/amarelo/vermelho, sempre com texto) é o sinal principal. */
 :root {
-  /* Identidade "Bruno Coelho · do anúncio à agenda": off-white, navy, azul e coral. Claro é o padrão. */
-  --bg: #F7F5F0;
-  --surface: #FFFFFF;
-  --surface-2: #EEF2F9;
-  --ink: #1C2330;
-  --ink-2: #5A6476;
-  --ink-3: #7A8496;
-  --navy: #0B1F3A;
-  --line: rgba(11, 31, 58, 0.12);
-  --line-strong: rgba(11, 31, 58, 0.22);
-  --accent: #1D4ED8;
-  --accent-ink: #FFFFFF;
-  --accent-soft: #DCE6F7;
-  --coral: #FF6A3D; --coral-hover: #FF805A; --coral-ink: #F7F5F0;
-  --blue: #1D4ED8;
-  --blue-txt: #1D4ED8;
-  --ok: #15803D;      --ok-soft: #DCF2E3;
-  --warn: #A16207;    --warn-soft: #FBEFD2;
-  --bad: #B42318;     --bad-soft: #FCE4DC;
+  /* Paleta 60/30/10: Ricotta Cream (base), Prussian Blue (segunda), Lobster Red (destaque). Claro é o padrão. */
+  --bg: #F0E8D8;
+  --surface: #FAF6EE;
+  --surface-2: #E8DFCC;
+  --ink: #1B3350;
+  --ink-2: #4E5F75;
+  --ink-3: #6E7C8F;
+  --navy: #1B3350;
+  --line: rgba(27, 51, 80, 0.14);
+  --line-strong: rgba(27, 51, 80, 0.26);
+  --accent: #1B3350;
+  --accent-ink: #F0E8D8;
+  --accent-soft: #DCE2EA;
+  --coral: #F03A2A; --coral-hover: #D92E1F; --coral-ink: #F0E8D8;
+  --blue: #1B3350;
+  --blue-txt: #1B3350;
+  --ok: #2F7A45;      --ok-soft: #DDEBD9;
+  --warn: #9A6200;    --warn-soft: #F3E2BE;
+  --bad: #C42A1C;     --bad-soft: #F8D9D2;
   --f-display: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --f-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
   --f-mono: 'Inter', system-ui, sans-serif;
@@ -45,11 +45,19 @@
   color-scheme: light;
 }
 :root[data-theme="dark"] {
-  --bg: #0B1F3A; --surface: #13294A; --surface-2: #1A3358; --ink: #F7F5F0; --ink-2: #A9B8D3; --ink-3: #8293B3;
-  --navy: #F7F5F0; --line: rgba(247, 245, 240, 0.14); --line-strong: rgba(247, 245, 240, 0.24);
-  --accent: #7FA6FF; --accent-ink: #0B1F3A; --accent-soft: #16305A;
-  --blue: #7FA6FF; --blue-txt: #7FA6FF;
-  --ok: #4ADE80; --ok-soft: #12321F; --warn: #FBBF24; --warn-soft: #33290B; --bad: #FF8A6B; --bad-soft: #3A1B16;
+  /* Escuro profissional: prússia profundo como base, altura pela luz, texto em creme, vermelho ajustado */
+  --bg: #0F1D2E;                 /* fundo (60%) */
+  --surface: #16273C;            /* cards e colunas */
+  --surface-2: #1B3350;          /* elevado: ficha, modais, blocos de destaque */
+  --surface-3: #243F60;          /* hover e selecionado */
+  --ink: #F0E8D8; --ink-2: #B9C2CE; --ink-3: #8695A8;
+  --navy: #F0E8D8;
+  --line: rgba(240, 232, 216, 0.12); --line-strong: rgba(240, 232, 216, 0.22);
+  --accent: #8FB0D9; --accent-ink: #0F1D2E; --accent-soft: #243F60;   /* destaque frio do dia a dia */
+  --blue: #8FB0D9; --blue-txt: #8FB0D9;
+  --coral: #FF6B5C; --coral-hover: #FF8174; --coral-ink: #F0E8D8;   /* vermelho em texto e ícones */
+  --coral-btn: #D63324; --coral-btn-hover: #E23C2C;                  /* vermelho em botão, texto creme */
+  --ok: #7BD392; --ok-soft: #173826; --warn: #F2C063; --warn-soft: #3A2E12; --bad: #FF6B5C; --bad-soft: #3A1E22;
   color-scheme: dark;
 }
 
@@ -490,12 +498,12 @@ a { color: var(--accent); }
 :root[data-theme="light"] a { color: var(--accent); }
 
 /* barra superior e marca */
-.topbar { background: rgba(247, 245, 240, .9); }
-:root[data-theme="dark"] .topbar { background: rgba(11, 31, 58, .9); }
-.marca-sigla, .marca-bc { width: 40px; height: 40px; border-radius: 11px; background: #0B1F3A; color: #F7F5F0; border: 0; display: grid; place-items: center; position: relative; flex: none;
+.topbar { background: rgba(240, 232, 216, .92); }
+:root[data-theme="dark"] .topbar { background: rgba(27, 51, 80, .9); }
+.marca-sigla, .marca-bc { width: 40px; height: 40px; border-radius: 11px; background: #1B3350; color: #F0E8D8; border: 0; display: grid; place-items: center; position: relative; flex: none;
   font-family: var(--f-display); font-weight: 800; font-size: 15px; letter-spacing: -0.02em; padding: 0; }
 .marca-sigla::after, .marca-bc::after { content: ""; position: absolute; right: 7px; bottom: 7px; left: auto; width: 6px; height: 6px; margin: 0; border-radius: 50%; background: var(--coral); box-shadow: none; }
-:root[data-theme="dark"] .marca-bc { background: #F7F5F0; color: #0B1F3A; }
+:root[data-theme="dark"] .marca-bc { background: #F0E8D8; color: #1B3350; }
 .marca-txt { display: flex; flex-direction: column; line-height: 1.15; }
 .marca-nome { font-family: var(--f-display); font-weight: 800; font-size: 16px; letter-spacing: -0.01em; text-transform: none; color: var(--navy); }
 .marca-tag { font-size: 12px; color: var(--ink-2); }
@@ -511,20 +519,20 @@ a { color: var(--accent); }
 .btn.fantasma:hover { background: var(--surface-2); color: var(--accent); }
 .btn.perigo:hover { color: var(--bad); border-color: var(--bad); }
 input, select, textarea { border-radius: var(--raio) !important; }
-input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29, 78, 216, .15); outline: none; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(27, 51, 80, .18); outline: none; }
 
 /* superfícies arredondadas, como os cards da página */
 .bloco { border-top: 0; }
 .kpi, .novo-contato, .pra-hoje, .sdr-faixa, .gv-sdr, .aviso, .toast, .dica, .col, .ico-c { border-radius: var(--raio-g); }
 .cartao { border-radius: 12px; }
-.cartao:hover, .cartao:focus-visible { border-color: var(--accent); box-shadow: 0 8px 22px -14px rgba(11, 31, 58, .35); }
+.cartao:hover, .cartao:focus-visible { border-color: var(--accent); box-shadow: 0 8px 22px -14px rgba(27, 51, 80, .35); }
 .kpi { border-color: var(--line); }
 .kpi .val, .faixa .val, .resumo-pros .val, .notaviva .grande, .sdr-itens .val { font-family: var(--f-display); font-weight: 800; letter-spacing: -0.02em; color: var(--navy); }
-.kpi.dest { background: #0B1F3A; border-color: #0B1F3A; }
-.kpi.dest .rot { color: #A9B8D3; } .kpi.dest .val { color: var(--coral); }
-:root[data-theme="dark"] .kpi.dest { background: #F7F5F0; border-color: #F7F5F0; } :root[data-theme="dark"] .kpi.dest .rot { color: #5A6476; }
+.kpi.dest { background: #1B3350; border-color: #1B3350; }
+.kpi.dest .rot { color: #C3CCD8; } .kpi.dest .val { color: var(--coral); }
+:root[data-theme="dark"] .kpi.dest { background: #F0E8D8; border-color: #F0E8D8; } :root[data-theme="dark"] .kpi.dest .rot { color: #4E5F75; }
 .pra-hoje { border-color: var(--line); overflow: hidden; }
-.ph-cab { background: #0B1F3A; color: #F7F5F0; letter-spacing: .1em; }
+.ph-cab { background: #1B3350; color: #F0E8D8; letter-spacing: .1em; }
 .pill-marca { background: transparent; color: var(--accent); padding: 0; letter-spacing: .12em; font-weight: 600; display: inline-flex; align-items: center; gap: 10px; }
 .pill-marca::before { content: ""; width: 18px; height: 2px; border-radius: 2px; background: currentColor; }
 .losango { width: 8px; height: 8px; border-radius: 50%; transform: none; background: var(--coral); }
@@ -540,25 +548,50 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 .progresso, .progresso > i, .barra .trilho, .barra .trilho i { border-radius: 4px; }
 .curva, .legenda i { border-radius: 6px; }
 dialog { border-radius: var(--raio-g); border-color: var(--line); }
-dialog::backdrop { background: rgba(11, 31, 58, .55); }
+dialog::backdrop { background: rgba(27, 51, 80, .55); }
 dialog.gaveta { border-radius: var(--raio-g) 0 0 var(--raio-g); }
 .gv-cab { border-bottom: 1px solid var(--line); background: var(--surface); }
 .gv-cab h3 { font-family: var(--f-display); }
 .gv-sdr { background: var(--surface-2); border-color: transparent; }
 .msg.env .bolha { background: var(--accent-soft); }
-.msg.rec .bolha { background: #fff; border: 1px solid var(--line); }
+.msg.rec .bolha { background: #FAF6EE; border: 1px solid var(--line); }
 :root[data-theme="dark"] .msg.rec .bolha { background: var(--surface-2); }
-.conversa { background: #E7DDD2; border-radius: var(--raio-g); padding: 12px; }
-:root[data-theme="dark"] .conversa { background: #081629; }
+.conversa { background: #E4D8C3; border-radius: var(--raio-g); padding: 12px; }
+:root[data-theme="dark"] .conversa { background: #132538; }
 .toast.erro { color: #fff; }
 @media (max-width: 640px) { .marca-tag { display: none; } dialog, dialog.gaveta { border-radius: 0; } }
 /* coral só na ação principal da tela; botões repetidos em listas e cartões ficam navy/azul, como na página */
-li .btn.primario, .ph-corpo .btn.primario, .tabela .btn.primario { background: #0B1F3A; border-color: #0B1F3A; color: #F7F5F0; }
+li .btn.primario, .ph-corpo .btn.primario, .tabela .btn.primario { background: #1B3350; border-color: #1B3350; color: #F0E8D8; }
 li .btn.primario:hover, .ph-corpo .btn.primario:hover, .tabela .btn.primario:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
-:root[data-theme="dark"] li .btn.primario, :root[data-theme="dark"] .ph-corpo .btn.primario, :root[data-theme="dark"] .tabela .btn.primario { background: var(--accent); border-color: var(--accent); color: #0B1F3A; }
+:root[data-theme="dark"] li .btn.primario, :root[data-theme="dark"] .ph-corpo .btn.primario, :root[data-theme="dark"] .tabela .btn.primario { background: var(--accent); border-color: var(--accent); color: #1B3350; }
 .btn-av { background: var(--accent-soft); border-color: var(--accent-soft); color: var(--accent); border-radius: 8px; }
 .btn-av:hover { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-:root[data-theme="dark"] .ph-cab { background: #081629; }
+:root[data-theme="dark"] .ph-cab { background: #132538; }
+
+/* ───────── tema escuro: ajustes de papel ───────── */
+:root[data-theme="dark"] .btn.primario { background: var(--coral-btn); border-color: var(--coral-btn); color: #F0E8D8; }
+:root[data-theme="dark"] .btn.primario:hover { background: var(--coral-btn-hover); border-color: var(--coral-btn-hover); color: #F0E8D8; }
+:root[data-theme="dark"] li .btn.primario, :root[data-theme="dark"] .ph-corpo .btn.primario, :root[data-theme="dark"] .tabela .btn.primario { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+:root[data-theme="dark"] .btn:hover, :root[data-theme="dark"] .btn.fantasma:hover { background: var(--surface-3); }
+:root[data-theme="dark"] .btn-av:hover { background: var(--accent); color: var(--accent-ink); }
+:root[data-theme="dark"] .topbar { background: rgba(15, 29, 46, .92); }
+:root[data-theme="dark"] .kpi.dest { background: var(--surface-2); border-color: var(--line-strong); }
+:root[data-theme="dark"] .kpi.dest .rot { color: var(--ink-2); }
+:root[data-theme="dark"] .kpi.dest .val { color: var(--coral); }
+:root[data-theme="dark"] .ph-cab { background: var(--surface-2); color: var(--ink); border-bottom: 1px solid var(--line); }
+:root[data-theme="dark"] .pra-hoje, :root[data-theme="dark"] .kpi, :root[data-theme="dark"] .cartao, :root[data-theme="dark"] .novo-contato { background: var(--surface); }
+:root[data-theme="dark"] .col { background: rgba(240, 232, 216, 0.03); }
+:root[data-theme="dark"] .cartao:hover, :root[data-theme="dark"] .cartao:focus-visible { background: var(--surface-2); border-color: var(--accent); box-shadow: none; }
+:root[data-theme="dark"] dialog, :root[data-theme="dark"] .gv-cab { background: var(--surface-2); }
+:root[data-theme="dark"] dialog::backdrop { background: rgba(5, 10, 18, .7); }
+:root[data-theme="dark"] .gv-sdr { background: var(--surface); }
+:root[data-theme="dark"] input, :root[data-theme="dark"] select, :root[data-theme="dark"] textarea { background: var(--bg); border-color: var(--line-strong); }
+:root[data-theme="dark"] input:focus, :root[data-theme="dark"] select:focus, :root[data-theme="dark"] textarea:focus { box-shadow: 0 0 0 3px rgba(143, 176, 217, .25); }
+:root[data-theme="dark"] .conversa { background: #0B1726; }
+:root[data-theme="dark"] .msg.env .bolha { background: var(--surface-3); color: var(--ink); }
+:root[data-theme="dark"] .msg.rec .bolha { background: var(--surface-2); border-color: var(--line); }
+:root[data-theme="dark"] .chip.atrasado { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+:root[data-theme="dark"] .toast { background: var(--surface-3); color: var(--ink); }
 
 </style>
 </head>
