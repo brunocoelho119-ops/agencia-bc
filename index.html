@@ -2422,7 +2422,7 @@ window.BC_CONFIG = {
   BC.abrirRenovacao = function (clienteId) {
     var c = S.get('clientes', clienteId); if (!c) return;
     var fim = C.fimContrato(c), dAtual = Number(c.duracao_meses) || 6;
-    var durs = [3, 6, 9, 12, 18, 24]; if (durs.indexOf(dAtual) < 0) durs.push(dAtual);
+    var durs = [2, 3, 6, 9, 12, 18, 24]; if (durs.indexOf(dAtual) < 0) durs.push(dAtual);
     durs.sort(function (a, b) { return a - b; });
     var html = '<form class="dlg" data-form="renovacao" data-cliente="' + esc(c.id) + '">' +
       BC.cabDialogo('Renovar contrato · ' + esc(c.nome), 'O contrato atual termina em ' + BC.data(fim) + ' (' + BC.rotuloDias(C.diasParaFim(c)) + '). O novo período começa quando o atual termina, sem buraco entre os dois.') +
