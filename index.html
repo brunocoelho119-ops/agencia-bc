@@ -719,6 +719,10 @@ a, .linkbtn, .tag.acc, .curva.B { color: var(--blue-txt); }
 .campo .btn.arquivo { width: fit-content; justify-content: flex-start; }
 @media (max-width: 640px) { .aviso-fino { flex-wrap: wrap; gap: 4px; } .aviso-fino .btn { padding-left: 0; } }
 
+/* Renovações */
+.txt-ok { color: var(--ok); font-weight: 600; }
+.tab-contratos tr.vigente td { background: color-mix(in srgb, var(--accent-soft) 60%, transparent); }
+
 </style>
 </head>
 <body>
@@ -836,8 +840,29 @@ window.BC_CONFIG = {
   // ───────────── cliente: tempo de casa, valor, contrato, curva ─────────────
   function fimVida(c, h) { return (c.status === 'churn' && c.churn_data) ? c.churn_data : h; }
   function ltMeses(c, h) { h = h || hoje(); return Math.max(0, diffDias(c.inicio, fimVida(c, h))) / 30.4375; }
-  function ltv(c, h) { return ltMeses(c, h) * (Number(c.mensalidade) || 0); }
-  function fimContrato(c) { return addMeses(c.inicio, Number(c.duracao_meses) || 0); }
+  // LTV = soma do que o cliente pagou; com renovações, cada período conta com a mensalidade dele
+  function ltv(c, h, renovs) {
+    h = h || hoje();
+    var rs = (renovs || []).filter(function (r) { return r.cliente_id === c.id; });
+    if (!rs.length) return ltMeses(c, h) * (Number(c.mensalidade) || 0);
+    var fimV = fimVida(c, h), marcos = [c.inicio];
+    rs.forEach(function (r) { if (r.vigencia_inicio > c.inicio && r.vigencia_inicio < fimV) marcos.push(r.vigencia_inicio); });
+    marcos.sort(); marcos.push(fimV);
+    var total = 0;
+    for (var i = 0; i < marcos.length - 1; i++) total += Math.max(0, diffDias(marcos[i], marcos[i + 1])) / 30.4375 * mensalidadeEm(c, marcos[i], rs);
+    return total;
+  }
+  // período vigente: começa na última renovação (vigencia_inicio) ou no início do cliente
+  function inicioVigencia(c) { return c.vigencia_inicio || c.inicio; }
+  function fimContrato(c) { return addMeses(inicioVigencia(c), Number(c.duracao_meses) || 0); }
+  // mensalidade que valia numa data, olhando o histórico de renovações (reajustes)
+  function mensalidadeEm(c, iso, renovs) {
+    var rs = (renovs || []).filter(function (r) { return r.cliente_id === c.id; }).sort(function (a, b) { return a.vigencia_inicio < b.vigencia_inicio ? -1 : 1; });
+    if (!rs.length) return Number(c.mensalidade) || 0;
+    var v = rs[0].mensalidade_anterior != null ? Number(rs[0].mensalidade_anterior) : Number(c.mensalidade) || 0;
+    rs.forEach(function (r) { if (r.vigencia_inicio <= iso) v = Number(r.mensalidade) || 0; });
+    return v;
+  }
   function diasParaFim(c, h) { return diffDias(h || hoje(), fimContrato(c)); }
 
   // Curva por percentil de mensalidade entre os ativos: A = 20% de cima, B = próximos 30%, C = resto.
@@ -989,19 +1014,19 @@ window.BC_CONFIG = {
   }
 
   // ───────────── MRR: histórico, previsão, pipeline, concentração ─────────────
-  function mrrEm(clientes, iso) {
+  function mrrEm(clientes, iso, renovs) {
     return soma(clientes.filter(function (c) {
       return c.inicio <= iso && (c.status !== 'churn' || !c.churn_data || c.churn_data > iso);
-    }), function (c) { return c.mensalidade; });
+    }), function (c) { return mensalidadeEm(c, iso, renovs); });
   }
-  function historicoMrr(clientes, h, n) {
+  function historicoMrr(clientes, h, n, renovs) {
     h = h || hoje(); n = n || 6;
     var out = [];
     for (var i = n - 1; i >= 0; i--) {
       var mes = addMesesMes(h, -i), ini = mes + '-01';
       var fim = i === 0 ? h : ultimoDiaMes(ini);
       out.push({
-        mes: mes, mrr: mrrEm(clientes, fim),
+        mes: mes, mrr: mrrEm(clientes, fim, renovs),
         novo: soma(clientes.filter(function (c) { return mesDe(c.inicio) === mes; }), function (c) { return c.mensalidade; }),
         perdido: soma(clientes.filter(function (c) { return c.status === 'churn' && c.churn_data && mesDe(c.churn_data) === mes; }), function (c) { return c.mensalidade; })
       });
@@ -1215,7 +1240,7 @@ window.BC_CONFIG = {
     toISO: toISO, parseISO: parseISO, hoje: hoje, setHoje: setHoje, addDias: addDias, addMeses: addMeses, diffDias: diffDias,
     inicioSemana: inicioSemana, mesDe: mesDe, primeiroDiaMes: primeiroDiaMes, ultimoDiaMes: ultimoDiaMes, addMesesMes: addMesesMes,
     diaUtil: diaUtil, dataLocalDe: dataLocalDe, soma: soma,
-    ltMeses: ltMeses, ltv: ltv, fimContrato: fimContrato, diasParaFim: diasParaFim, curvaABC: curvaABC,
+    ltMeses: ltMeses, ltv: ltv, fimContrato: fimContrato, inicioVigencia: inicioVigencia, mensalidadeEm: mensalidadeEm, diasParaFim: diasParaFim, curvaABC: curvaABC,
     notaRelacionamento: notaRelacionamento, faixaRelacionamento: faixaRelacionamento, exigeJustificativa: exigeJustificativa,
     cpl: cpl, saude: saude, estatChurn: estatChurn,
     mrrEm: mrrEm, historicoMrr: historicoMrr, previsaoMrr: previsaoMrr, pipelinePonderado: pipelinePonderado, concentracao: concentracao,
@@ -1235,7 +1260,7 @@ window.BC_CONFIG = {
    local (localStorage) agora, Supabase depois (js/store-supabase.js). Mesmos nomes de colunas nos dois. */
 (function (root) {
   'use strict';
-  var TABELAS = ['clientes', 'checkins', 'feedbacks', 'listas', 'prospects', 'atividades', 'configuracoes'];
+  var TABELAS = ['clientes', 'checkins', 'feedbacks', 'renovacoes', 'listas', 'prospects', 'atividades', 'configuracoes'];
   var PREFIXO = 'bc:v1:';
 
   function uid() {
@@ -1405,7 +1430,7 @@ window.BC_CONFIG = {
           cache[TABELAS[i]] = [];
         }
       }
-      var ordem = ['clientes', 'listas', 'prospects', 'checkins', 'feedbacks', 'atividades', 'configuracoes'];
+      var ordem = ['clientes', 'listas', 'prospects', 'checkins', 'feedbacks', 'renovacoes', 'atividades', 'configuracoes'];
       for (i = 0; i < ordem.length; i++) {
         var existentes = {};
         cache[ordem[i]].forEach(function (r) { existentes[r.id] = true; });
@@ -2209,8 +2234,8 @@ window.BC_CONFIG = {
       campo('cli-whatsapp', 'WhatsApp', inp('cli-whatsapp', 'text', BC.tel(v('whatsapp')), 'inputmode="tel" data-input="mascara-tel"')) +
       campo('cli-instagram', 'Instagram (sem @)', inp('cli-instagram', 'text', v('instagram'))) +
       campo('cli-mensalidade', 'Mensalidade (R$)', inp('cli-mensalidade', 'number', v('mensalidade'), 'required min="0" step="any" inputmode="decimal"'), { dica: 'Valor da sua gestão, sem a verba dos anúncios.' }) +
-      campo('cli-inicio', 'Início do contrato', inp('cli-inicio', 'date', v('inicio', C.hoje()), 'required')) +
-      campo('cli-duracao_meses', 'Duração (meses)', '<select id="cli-duracao_meses" name="duracao_meses">' + opcoes(durs.map(function (d) { return [d, d + ' meses']; }), dAtual) + '</select>') +
+      campo('cli-inicio', c.vigencia_inicio ? 'Cliente desde' : 'Início do contrato', inp('cli-inicio', 'date', v('inicio', C.hoje()), 'required'), c.vigencia_inicio ? { dica: 'Data em que ele virou cliente. O período atual começou em ' + BC.data(c.vigencia_inicio) + ' (última renovação).' } : null) +
+      campo('cli-duracao_meses', c.vigencia_inicio ? 'Duração do período atual' : 'Duração (meses)', '<select id="cli-duracao_meses" name="duracao_meses">' + opcoes(durs.map(function (d) { return [d, d + ' meses']; }), dAtual) + '</select>') +
       campo('cli-verba_mensal', 'Verba mensal de anúncios (R$)', inp('cli-verba_mensal', 'number', v('verba_mensal'), 'min="0" step="any" inputmode="decimal"'), { dica: 'Paga pelo cliente direto à plataforma.' }) +
       campo('cli-meta_leads_semana', 'Meta de leads por semana', inp('cli-meta_leads_semana', 'number', v('meta_leads_semana'), 'min="0" step="1" inputmode="numeric"'), { dica: 'Usada no health score.' }) +
       campo('cli-meta_cpl', 'CPL máximo aceitável (R$)', inp('cli-meta_cpl', 'number', v('meta_cpl'), 'min="0" step="any" inputmode="decimal"')) +
@@ -2260,6 +2285,8 @@ window.BC_CONFIG = {
       for (var i = 0; i < filhos.length; i++) await S.remove('checkins', filhos[i].id);
       filhos = S.all('feedbacks').filter(function (f) { return f.cliente_id === id; });
       for (i = 0; i < filhos.length; i++) await S.remove('feedbacks', filhos[i].id);
+      filhos = S.all('renovacoes').filter(function (r) { return r.cliente_id === id; });
+      for (i = 0; i < filhos.length; i++) await S.remove('renovacoes', filhos[i].id);
       var ps = S.all('prospects').filter(function (p) { return p.cliente_id === id; });
       for (i = 0; i < ps.length; i++) await S.update('prospects', ps[i].id, { cliente_id: null });
       await S.remove('clientes', id);
@@ -2390,6 +2417,57 @@ window.BC_CONFIG = {
     }, form);
   };
   BC.act['excluir-feedback'] = function (el) { BC.seguro(async function () { await S.remove('feedbacks', el.dataset.id); BC.toast('Feedback removido.'); }); };
+
+  // ───────────── renovação de contrato ─────────────
+  BC.abrirRenovacao = function (clienteId) {
+    var c = S.get('clientes', clienteId); if (!c) return;
+    var fim = C.fimContrato(c), dAtual = Number(c.duracao_meses) || 6;
+    var durs = [3, 6, 9, 12, 18, 24]; if (durs.indexOf(dAtual) < 0) durs.push(dAtual);
+    durs.sort(function (a, b) { return a - b; });
+    var html = '<form class="dlg" data-form="renovacao" data-cliente="' + esc(c.id) + '">' +
+      BC.cabDialogo('Renovar contrato · ' + esc(c.nome), 'O contrato atual termina em ' + BC.data(fim) + ' (' + BC.rotuloDias(C.diasParaFim(c)) + '). O novo período começa quando o atual termina, sem buraco entre os dois.') +
+      '<div class="grade">' +
+      campo('rn-vigencia_inicio', 'Novo período começa em', inp('rn-vigencia_inicio', 'date', fim, 'required')) +
+      campo('rn-duracao_meses', 'Duração', '<select id="rn-duracao_meses" name="duracao_meses">' + opcoes(durs.map(function (d) { return [d, d + ' meses']; }), dAtual) + '</select>') +
+      campo('rn-mensalidade', 'Mensalidade do novo período (R$)', inp('rn-mensalidade', 'number', c.mensalidade, 'required min="0" step="any" inputmode="decimal"'), { dica: 'Hoje: ' + BC.brl(c.mensalidade) + '. Se teve reajuste, coloque o valor novo.' }) +
+      campo('rn-data', 'Renovação fechada em', inp('rn-data', 'date', C.hoje(), 'required')) +
+      campo('rn-notas', 'Observações', '<textarea id="rn-notas" name="notas" placeholder="Ex.: reajuste de 10%, incluiu Google Ads, pediu relatório quinzenal..."></textarea>', { largo: true }) +
+      '</div><p class="erro-form" hidden role="alert"></p>' +
+      '<div class="dlg-rodape"><button type="button" class="btn" data-act="fechar">Cancelar</button><button type="submit" class="btn primario">Renovar</button></div></form>';
+    BC.dialogo(html);
+  };
+  BC.act['renovar'] = function (el) { BC.abrirRenovacao(el.dataset.id); };
+  BC.forms.renovacao = function (form) {
+    var d = BC.dados(form), c = S.get('clientes', form.dataset.cliente);
+    if (!c) return;
+    var dur = Number(d.duracao_meses) || 0, mens = Number(d.mensalidade);
+    if (!d.vigencia_inicio) return BC.erroForm(form, 'Informe quando começa o novo período.');
+    if (d.vigencia_inicio < C.inicioVigencia(c)) return BC.erroForm(form, 'O novo período não pode começar antes do período atual (' + BC.data(C.inicioVigencia(c)) + ').');
+    if (!(mens >= 0) || d.mensalidade === '') return BC.erroForm(form, 'Informe a mensalidade.');
+    BC.seguro(async function () {
+      await S.insert('renovacoes', {
+        cliente_id: c.id, data: d.data || C.hoje(), vigencia_inicio: d.vigencia_inicio, duracao_meses: dur,
+        mensalidade_anterior: Number(c.mensalidade) || 0, mensalidade: mens, notas: BC.txt(d.notas),
+        vigencia_anterior: c.vigencia_inicio || null, duracao_anterior: Number(c.duracao_meses) || null
+      });
+      await S.update('clientes', c.id, { vigencia_inicio: d.vigencia_inicio, duracao_meses: dur, mensalidade: mens });
+      BC.fechar(form);
+      BC.toast('Contrato renovado até ' + BC.data(C.fimContrato({ vigencia_inicio: d.vigencia_inicio, duracao_meses: dur })) + '.');
+    }, form);
+  };
+  // desfaz só a renovação mais recente: volta o cliente para o período e a mensalidade anteriores
+  BC.act['desfazer-renovacao'] = function (el) {
+    if (!el.dataset.confirmar) { el.dataset.confirmar = '1'; el.textContent = 'Confirmar'; return; }
+    BC.seguro(async function () {
+      var r = S.get('renovacoes', el.dataset.id); if (!r) return;
+      var patch = { vigencia_inicio: r.vigencia_anterior || null };
+      if (r.duracao_anterior) patch.duracao_meses = r.duracao_anterior;
+      if (r.mensalidade_anterior != null) patch.mensalidade = Number(r.mensalidade_anterior);
+      await S.update('clientes', r.cliente_id, patch);
+      await S.remove('renovacoes', r.id);
+      BC.toast('Renovação desfeita.');
+    });
+  };
 
   // ───────────── churn ─────────────
   BC.abrirChurn = function (clienteId) {
@@ -2889,11 +2967,42 @@ window.BC_CONFIG = {
     else out += '<ul class="linhas">' + renov.map(function (c) {
       var d = C.diasParaFim(c, h), s = x.saude[c.id];
       return '<li><div class="corpo">' + linkCli(c) + ' ' + BC.pillFarol(s.farol) + '<div class="det">' + (d < 0 ? 'Venceu ' + BC.rotuloDias(d) : 'Termina ' + BC.rotuloDias(d)) + ' (' + BC.data(C.fimContrato(c)) + ') · ' + BC.brl(c.mensalidade) + '/mês</div></div>' +
-        '<div class="acoes"><button class="btn mini" data-act="novo-feedback" data-id="' + esc(c.id) + '">+ Feedback</button></div></li>';
+        '<div class="acoes"><button class="btn mini fantasma" data-act="novo-feedback" data-id="' + esc(c.id) + '">+ Feedback</button><button class="btn mini" data-act="renovar" data-id="' + esc(c.id) + '">Renovar</button></div></li>';
     }).join('') + '</ul>';
     out += '</section></div>';
     return out;
   };
+
+  // ───────────── histórico de contratos do cliente ─────────────
+  function historicoContratos(c, rns, h, perdido) {
+    var primeiro = rns[0];
+    var periodos = [{
+      ini: c.inicio, dur: primeiro ? primeiro.duracao_anterior : c.duracao_meses,
+      mens: primeiro ? primeiro.mensalidade_anterior : c.mensalidade, nome: 'Contrato inicial', r: null
+    }].concat(rns.map(function (r, i) {
+      return { ini: r.vigencia_inicio, dur: r.duracao_meses, mens: r.mensalidade, ant: r.mensalidade_anterior, nome: (i + 1) + 'ª renovação', r: r };
+    }));
+    var out = '<section class="bloco espaco"><div class="bloco-cab"><h2>Contratos</h2>' + (perdido ? '' : '<button class="btn mini" data-act="renovar" data-id="' + esc(c.id) + '">Renovar contrato</button>') + '</div>';
+    out += '<div class="rolagem"><table class="tabela tab-contratos"><thead><tr><th>Período</th><th>Vigência</th><th class="num">Duração</th><th class="num">Mensalidade</th><th class="hide-s">Fechado em</th><th class="hide-s">Observações</th><th></th></tr></thead><tbody>';
+    periodos.slice().reverse().forEach(function (p, i) {
+      var atual = i === 0, fim = p.dur ? C.fimContrato({ inicio: p.ini, duracao_meses: p.dur }) : null;
+      var reaj = (p.ant != null && Number(p.ant) > 0 && Number(p.mens) !== Number(p.ant)) ? (Number(p.mens) / Number(p.ant) - 1) : null;
+      out += '<tr' + (atual && !perdido ? ' class="vigente"' : '') + '><td><strong>' + p.nome + '</strong>' + (atual && !perdido ? ' <span class="tag acc">vigente</span>' : '') + '</td>' +
+        '<td class="nowrap">' + BC.data(p.ini) + (fim ? ' → ' + BC.data(fim) : '') + '</td>' +
+        '<td class="num">' + (p.dur ? p.dur + ' m' : '—') + '</td>' +
+        '<td class="num nowrap">' + (p.mens != null ? BC.brl(p.mens) : '—') + (reaj != null ? ' <span class="small ' + (reaj > 0 ? 'txt-ok' : 'txt-perigo') + '">' + (reaj > 0 ? '+' : '') + BC.n1(reaj * 100) + '%</span>' : '') + '</td>' +
+        '<td class="hide-s nowrap">' + (p.r ? BC.data(p.r.data) : '—') + '</td>' +
+        '<td class="hide-s truncar">' + esc(p.r && p.r.notas ? p.r.notas : '') + '</td>' +
+        '<td>' + (atual && p.r ? '<button class="btn mini fantasma" data-act="desfazer-renovacao" data-id="' + esc(p.r.id) + '" title="Volta o contrato para o período anterior">Desfazer</button>' : '') + '</td></tr>';
+    });
+    out += '</tbody></table></div>';
+    if (rns.length) {
+      var reajTotal = periodos[0].mens > 0 ? Number(c.mensalidade) / Number(periodos[0].mens) - 1 : null;
+      out += '<p class="small muted" style="margin-top:8px">' + rns.length + (rns.length > 1 ? ' renovações' : ' renovação') +
+        (reajTotal ? ' · mensalidade ' + (reajTotal > 0 ? 'subiu ' : 'caiu ') + BC.n1(Math.abs(reajTotal) * 100) + '% desde o início' : '') + '</p>';
+    }
+    return out + '</section>';
+  }
 
   // ───────────── clientes ─────────────
   BC.views.clientes = function () {
@@ -2915,14 +3024,14 @@ window.BC_CONFIG = {
         '<td><span class="curva ' + x.curva[c.id] + '" title="Curva por percentil de mensalidade">' + x.curva[c.id] + '</span></td>' +
         '<td class="num">' + BC.brl(c.mensalidade) + '</td>' +
         '<td class="num hide-s">' + BC.n1(C.ltMeses(c, h)) + ' m</td>' +
-        '<td class="num hide-s">' + BC.brl(C.ltv(c, h)) + '</td>' +
+        '<td class="num hide-s">' + BC.brl(C.ltv(c, h, S.all('renovacoes'))) + '</td>' +
         '<td class="num hide-s">' + (u && u.leads != null ? u.leads + (c.meta_leads_semana ? ' / ' + c.meta_leads_semana : '') : '—') + '</td>' +
         '<td>' + BC.pillRel(rel ? rel.nota_rel : null) + '</td>' +
         '<td>' + BC.pillFarol(s.farol, s.score) + '</td>' +
         '<td class="hide-s nowrap">' + BC.data(C.fimContrato(c)) + (s.renovacao ? ' <span class="tag acc">renovar</span>' : '') + '</td>' +
         '<td><button class="btn mini" data-act="checkin" data-id="' + esc(c.id) + '">Check-in</button></td></tr>';
     });
-    out += '</tbody><tfoot><tr><td colspan="2">Total</td><td class="num">' + BC.brl(mrr) + '</td><td class="hide-s"></td><td class="num hide-s">' + BC.brl(soma(x.ativos, function (c) { return C.ltv(c, h); })) + '</td><td colspan="5" class="hide-s"></td></tr></tfoot></table></div>';
+    out += '</tbody><tfoot><tr><td colspan="2">Total</td><td class="num">' + BC.brl(mrr) + '</td><td class="hide-s"></td><td class="num hide-s">' + BC.brl(soma(x.ativos, function (c) { return C.ltv(c, h, S.all('renovacoes')); })) + '</td><td colspan="5" class="hide-s"></td></tr></tfoot></table></div>';
     if (!lista.length) out += '<p class="vazio">Nenhum cliente em atenção. Bom sinal.</p>';
     out += '<p class="small faint" style="margin-top:12px">LT = meses desde o início. LTV = LT × mensalidade. Curva A/B/C por percentil de mensalidade entre os ativos (A = 20% maiores, B = próximos 30%, C = restante). O farol vem do health score de 0 a 100: verde a partir de 75, amarelo a partir de 50.</p>';
     return out;
@@ -2938,6 +3047,7 @@ window.BC_CONFIG = {
     var cks = checkinsDe(x, id), asc = cks.slice().reverse().slice(-10);
     var fbs = x.feedbacks.filter(function (f) { return f.cliente_id === id; }).sort(function (a, b) { return a.data < b.data ? 1 : (a.data > b.data ? -1 : 0); });
     var s = perdido ? null : x.saude[id];
+    var rns = S.all('renovacoes').filter(function (r) { return r.cliente_id === id; }).sort(function (a, b) { return a.vigencia_inicio < b.vigencia_inicio ? -1 : 1; });
 
     var out = '<a class="voltar" href="#' + (perdido ? 'churn' : 'clientes') + '">← ' + (perdido ? 'Churn' : 'Clientes') + '</a>';
     out += '<div class="cli-cab"><div style="min-width:0"><h1>' + esc(c.nome) + '</h1>' +
@@ -2949,7 +3059,9 @@ window.BC_CONFIG = {
       out += s.motivos.length ? '<ul class="motivos">' + s.motivos.map(function (m) { return '<li>− ' + esc(m.texto) + '</li>'; }).join('') + '</ul>' : '<p class="small muted" style="margin-top:8px">Sem alertas no momento.</p>';
     }
     out += '</div><div class="pagehead-acoes">';
-    if (!perdido) out += '<button class="btn primario" data-act="checkin" data-id="' + esc(id) + '">Check-in</button><button class="btn" data-act="novo-feedback" data-id="' + esc(id) + '">+ Feedback</button>';
+    // perto do vencimento, renovar vira a ação principal da tela
+    if (!perdido) out += '<button class="btn' + (s.renovacao ? '' : ' primario') + '" data-act="checkin" data-id="' + esc(id) + '">Check-in</button><button class="btn" data-act="novo-feedback" data-id="' + esc(id) + '">+ Feedback</button>' +
+      '<button class="btn' + (s.renovacao ? ' primario' : '') + '" data-act="renovar" data-id="' + esc(id) + '">Renovar contrato</button>';
     out += '<button class="btn" data-act="editar-cliente" data-id="' + esc(id) + '">Editar</button>';
     out += perdido ? '<button class="btn" data-act="reverter-churn" data-id="' + esc(id) + '">Reverter churn</button>' : '<span class="acao-risco"><button class="btn mini fantasma txt-perigo" data-act="churn" data-id="' + esc(id) + '">Dar churn</button></span>';
     out += '</div></div>';
@@ -2961,8 +3073,8 @@ window.BC_CONFIG = {
     out += '<div class="faixa">' +
       '<div><div class="rot">Mensalidade</div><div class="val">' + BC.brl(c.mensalidade) + '</div>' + (perdido ? '' : '<div class="nota">curva ' + x.curva[id] + '</div>') + '</div>' +
       '<div><div class="rot">LT</div><div class="val">' + BC.n1(C.ltMeses(c, h)) + '<span class="faint" style="font-size:16px"> meses</span></div><div class="nota">desde ' + BC.data(c.inicio) + '</div></div>' +
-      '<div><div class="rot">LTV</div><div class="val">' + BC.brl(C.ltv(c, h)) + '</div>' + (perdido ? '<div class="nota">congelado na saída</div>' : '') + '</div>' +
-      '<div><div class="rot">Contrato</div><div class="val" style="font-size:20px">' + BC.data(C.fimContrato(c)) + '</div><div class="nota">' + (Number(c.duracao_meses) || '—') + ' meses' + (perdido ? '' : ' · ' + BC.rotuloDias(C.diasParaFim(c, h))) + '</div></div>' +
+      '<div><div class="rot">LTV</div><div class="val">' + BC.brl(C.ltv(c, h, S.all('renovacoes'))) + '</div>' + (perdido ? '<div class="nota">congelado na saída</div>' : '') + '</div>' +
+      '<div><div class="rot">Contrato até</div><div class="val" style="font-size:20px">' + BC.data(C.fimContrato(c)) + '</div><div class="nota">' + (Number(c.duracao_meses) || '—') + ' meses' + (perdido ? '' : ' · ' + BC.rotuloDias(C.diasParaFim(c, h))) + (rns.length ? ' · ' + rns.length + (rns.length > 1 ? ' renovações' : ' renovação') : '') + '</div></div>' +
       '<div><div class="rot">Verba de anúncios</div><div class="val" style="font-size:20px">' + BC.brl(c.verba_mensal) + '</div><div class="nota">por mês, paga pelo cliente</div></div></div>';
 
     var leadsAsc = asc.filter(function (k) { return k.leads != null; });
@@ -2995,6 +3107,7 @@ window.BC_CONFIG = {
         '<div class="acoes"><button class="btn mini fantasma" data-act="excluir-feedback" data-id="' + esc(f.id) + '" aria-label="Remover feedback">Remover</button></div></li>';
     }).join('') + '</ul>';
     out += '</section>';
+    out += historicoContratos(c, rns, h, perdido);
     if (c.notas) out += '<section class="bloco espaco"><div class="bloco-cab"><h2>Notas</h2></div><p style="white-space:pre-wrap;overflow-wrap:anywhere">' + esc(c.notas) + '</p></section>';
     return out;
   };
@@ -3024,7 +3137,7 @@ window.BC_CONFIG = {
     out += '<section class="bloco espaco"><div class="bloco-cab"><h2>Clientes perdidos</h2></div><div class="rolagem"><table class="tabela"><thead><tr><th>Cliente</th><th>Motivo</th><th>Saída</th><th class="num hide-s">LT</th><th class="num hide-s">LTV</th><th class="hide-s">O que eu faria diferente</th></tr></thead><tbody>' +
       e.perdidos.sort(function (a, b) { return a.churn_data < b.churn_data ? 1 : -1; }).map(function (c) {
         return '<tr class="clicavel" data-act="abrir-cliente" data-id="' + esc(c.id) + '"><td class="nome">' + esc(c.nome) + '</td><td>' + esc(BC.nomeMotivo(c.churn_motivo)) + '</td><td class="nowrap">' + BC.data(c.churn_data) + '</td>' +
-          '<td class="num hide-s">' + BC.n1(C.ltMeses(c, h)) + ' m</td><td class="num hide-s">' + BC.brl(C.ltv(c, h)) + '</td><td class="hide-s" style="max-width:340px;overflow-wrap:anywhere">' + esc(c.churn_aprendizados || '—') + '</td></tr>';
+          '<td class="num hide-s">' + BC.n1(C.ltMeses(c, h)) + ' m</td><td class="num hide-s">' + BC.brl(C.ltv(c, h, S.all('renovacoes'))) + '</td><td class="hide-s" style="max-width:340px;overflow-wrap:anywhere">' + esc(c.churn_aprendizados || '—') + '</td></tr>';
       }).join('') + '</tbody></table></div></section>';
     return out;
   };
@@ -3040,7 +3153,7 @@ window.BC_CONFIG = {
     var x = BC.ctx(), h = x.h, pm = premissas(x.ativos);
     var farois = {}; x.ativos.forEach(function (c) { farois[c.id] = x.saude[c.id].farol; });
     var prev = C.previsaoMrr(x.clientes, farois, pm.renov, h, 6);
-    var hist = C.historicoMrr(x.clientes, h, 6);
+    var hist = C.historicoMrr(x.clientes, h, 6, S.all('renovacoes'));
     var pipe = C.pipelinePonderado(S.all('prospects'), pm.etapa, pm.ticket);
     var conc = C.concentracao(x.ativos);
     var mrr = soma(x.ativos, function (c) { return c.mensalidade; });
