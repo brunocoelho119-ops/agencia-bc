@@ -465,6 +465,8 @@ body.arrastando-cartao * { cursor: grabbing !important; }
 .gv-sdr { border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 10px; background: var(--surface-2); }
 .gv-sdr-cab { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
 .gv-sdr-cab h2 { margin: 0; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.gv-prop { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--line); padding-top: 10px; }
+.gv-prop h3 { margin: 0; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
 .sdr-dados { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; font-size: 13px; }
 .sdr-par dt { color: var(--ink-3); font-size: 12px; }
 .sdr-par dd { margin: 0; overflow-wrap: anywhere; }
@@ -621,6 +623,7 @@ window.BC_CONFIG = {
   var ETAPAS = [
     { id: 'novo', nome: 'A contatar' },
     { id: 'abordado', nome: 'Abordado' },
+    { id: 'follow_up', nome: 'Follow-up' },
     { id: 'respondeu', nome: 'Respondeu' },
     { id: 'diagnostico', nome: 'Mini-diagnóstico' },
     { id: 'reuniao', nome: 'Reunião' },
@@ -628,7 +631,9 @@ window.BC_CONFIG = {
     { id: 'fechado', nome: 'Fechado' },
     { id: 'perdido', nome: 'Perdido' }
   ];
-  var ORDEM_FUNIL = ['novo', 'abordado', 'respondeu', 'diagnostico', 'reuniao', 'proposta', 'fechado'];
+  var ORDEM_FUNIL = ['novo', 'abordado', 'follow_up', 'respondeu', 'diagnostico', 'reuniao', 'proposta', 'fechado'];
+  // O funil de conversão não tem linha própria para Follow-up (é uma fase da cadência, não uma conquista): conta como Abordado.
+  var ORDEM_CONVERSAO = ORDEM_FUNIL.filter(function (id) { return id !== 'follow_up'; });
 
   // Pesquisa de relacionamento: 5 critérios, nota 1 a 5. A confiança pesa o dobro.
   var CRITERIOS = [
@@ -910,7 +915,7 @@ window.BC_CONFIG = {
     probEtapa = probEtapa || PROB_ETAPA_PADRAO;
     var n = 0, mrr = 0, porEtapa = {};
     prospects.forEach(function (p) {
-      var pr = probEtapa[p.etapa];
+      var pr = probEtapa[p.etapa === 'follow_up' ? 'abordado' : p.etapa];
       if (pr == null) return;
       n++; mrr += pr * ticket;
       porEtapa[p.etapa] = (porEtapa[p.etapa] || 0) + 1;
@@ -931,8 +936,8 @@ window.BC_CONFIG = {
   }
   function funil(prospects) {
     var total = prospects.length;
-    var lista = ORDEM_FUNIL.map(function (id, i) {
-      var n = prospects.filter(function (p) { return ORDEM_FUNIL.indexOf(etapaMax(p)) >= i; }).length;
+    var lista = ORDEM_CONVERSAO.map(function (id, i) {
+      var n = prospects.filter(function (p) { var m = etapaMax(p); return ORDEM_CONVERSAO.indexOf(m === 'follow_up' ? 'abordado' : m) >= i; }).length;
       return { id: id, nome: ETAPAS.filter(function (e) { return e.id === id; })[0].nome, n: n };
     });
     lista.forEach(function (e, i) {
@@ -1000,8 +1005,9 @@ window.BC_CONFIG = {
     if (nova === 'fechado') return 'humano_assumiu';
     var base = sdrBase(p);
     if (['opt_out', 'sem_whatsapp', 'erro_envio'].indexOf(base) >= 0) return base;   // nunca reabre sozinho
+    if (nova === 'proposta' && /^proposta_/.test(base)) return base;   // cadência da proposta continua
     if (nova === 'diagnostico' || nova === 'reuniao' || nova === 'proposta') return (base === 'reuniao_marcada' && nova === 'reuniao') ? base : 'humano_assumiu';
-    if (nova === 'respondeu') return ['novo', 'mensagem_enviada', 'follow_up_1', 'follow_up_2'].indexOf(base) >= 0 ? 'respondeu' : base;
+    if (nova === 'respondeu') return ['novo', 'mensagem_enviada', 'follow_up_1', 'follow_up_2', 'follow_up_3'].indexOf(base) >= 0 ? 'respondeu' : base;
     if (nova === 'abordado') return base === 'novo' ? 'mensagem_enviada' : base;   // você abordou: o bot não manda de novo
     return base;
   }
@@ -1378,6 +1384,16 @@ window.BC_CONFIG = {
       var r = await sb.from(t).delete().eq('id', id);
       if (r.error) throw r.error;
     },
+    async uploadProposta(caminho, arquivo) {
+      var r = await sb.storage.from('propostas').upload(caminho, arquivo, { upsert: true, contentType: arquivo.type || 'application/octet-stream' });
+      if (r.error) throw r.error;
+    },
+    async linkProposta(caminho) {
+      var r = await sb.storage.from('propostas').createSignedUrl(caminho, 600);
+      if (r.error) throw r.error;
+      return r.data.signedUrl;
+    },
+    usuarioId() { return A.sessao && A.sessao.user ? A.sessao.user.id : null; },
     async removeMany(t, ids) {
       for (var i = 0; i < ids.length; i += 100) {
         var r = await sb.from(t).delete().in('id', ids.slice(i, i + 100));
@@ -1763,14 +1779,16 @@ window.BC_CONFIG = {
   var SDR = BC.sdr = {};
 
   var ROTULO = {
-    novo: 'Novo', mensagem_enviada: 'Mensagem enviada', respondeu: 'Respondeu', qualificando: 'Qualificando',
-    reuniao_marcada: 'Reunião marcada', follow_up_1: 'Follow-up 1', follow_up_2: 'Follow-up 2', perdido: 'Perdido',
-    opt_out: 'Opt-out', sem_whatsapp: 'Sem WhatsApp', erro_envio: 'Erro de envio', humano_assumiu: 'Você assumiu'
+    novo: 'Novo', mensagem_enviada: 'D1 · Abordagem enviada', respondeu: 'Respondeu', qualificando: 'Qualificando',
+    reuniao_marcada: 'Reunião marcada', follow_up_1: 'D2 · 1º follow-up', follow_up_2: 'D4 · 2º follow-up', follow_up_3: 'D7 · último follow-up', perdido: 'Perdido',
+    opt_out: 'Opt-out', sem_whatsapp: 'Sem WhatsApp', erro_envio: 'Erro de envio', humano_assumiu: 'Você assumiu',
+    proposta_pendente: 'Proposta na fila de envio', proposta_d0: 'D0 · Proposta enviada', proposta_d2: 'D2 · Dúvida da proposta', proposta_d5: 'D5 · Prova nova', proposta_d10: 'D10 · Último aviso'
   };
   var TOM = {
     novo: 'azul', mensagem_enviada: 'azul', respondeu: 'amarelo', qualificando: 'amarelo', reuniao_marcada: 'verde',
-    follow_up_1: 'amarelo', follow_up_2: 'amarelo', perdido: 'vermelho', opt_out: 'vermelho', sem_whatsapp: 'vermelho',
-    erro_envio: 'vermelho', humano_assumiu: 'eu'
+    follow_up_1: 'amarelo', follow_up_2: 'amarelo', follow_up_3: 'amarelo', perdido: 'vermelho', opt_out: 'vermelho', sem_whatsapp: 'vermelho',
+    erro_envio: 'vermelho', humano_assumiu: 'eu',
+    proposta_pendente: 'azul', proposta_d0: 'verde', proposta_d2: 'amarelo', proposta_d5: 'amarelo', proposta_d10: 'amarelo'
   };
   var ANGULO = { reputacao: 'Reputação', presenca_digital: 'Presença digital', canal_de_captacao: 'Canal de captação' };
 
@@ -1835,7 +1853,7 @@ window.BC_CONFIG = {
   SDR.filtro = function () {
     if (!SDR.ativo()) return '';
     var v = BC.ui.pSdr, op = [['', 'Todo o SDR'], ['fila', 'Na fila do bot'], ['anuncia', 'Já anunciam na Meta'], ['pausado', 'Você assumiu / pausado']];
-    ['mensagem_enviada', 'respondeu', 'qualificando', 'reuniao_marcada', 'follow_up_1', 'follow_up_2', 'perdido', 'opt_out', 'sem_whatsapp', 'erro_envio'].forEach(function (k) { op.push([k, ROTULO[k]]); });
+    ['mensagem_enviada', 'respondeu', 'qualificando', 'reuniao_marcada', 'follow_up_1', 'follow_up_2', 'follow_up_3', 'proposta_pendente', 'proposta_d0', 'proposta_d2', 'proposta_d5', 'proposta_d10', 'perdido', 'opt_out', 'sem_whatsapp', 'erro_envio'].forEach(function (k) { op.push([k, ROTULO[k]]); });
     return '<select data-change="filtro-pros" data-filtro="pSdr" aria-label="Status do SDR">' + op.map(function (o) {
       return '<option value="' + o[0] + '"' + (v === o[0] ? ' selected' : '') + '>' + esc(o[1]) + '</option>';
     }).join('') + '</select>';
@@ -1945,7 +1963,72 @@ window.BC_CONFIG = {
       b += '<button type="button" class="btn mini perigo" data-act="sdr-optout" data-id="' + id + '">Marcar opt-out</button>';
     }
     return '<section class="gv-sdr"><div class="gv-sdr-cab"><h2>Agente SDR</h2>' + SDR.badge(p) + '</div>' + av +
-      (dados ? '<dl class="sdr-dados">' + dados + '</dl>' : '') + SDR.dossie(p) + (b ? '<div class="gv-acoes">' + b + '</div>' : '') + '</section>';
+      (dados ? '<dl class="sdr-dados">' + dados + '</dl>' : '') + SDR.dossie(p) + SDR.proposta(p) + (b ? '<div class="gv-acoes">' + b + '</div>' : '') + '</section>';
+  };
+
+
+  // ───────────── proposta: anexar e deixar a cadência D0, D2, D5 e D10 com o bot ─────────────
+  function dd(iso) { return iso ? BC.dataHora(iso) : ''; }
+  SDR.proposta = function (p) {
+    if (!SDR.ativo() || ['diagnostico', 'reuniao', 'proposta'].indexOf(p.etapa) < 0) return '';
+    var id = esc(p.id), st = p.sdr_status || '', cad = /^proposta_/.test(st), enviada = !!p.proposta_enviada_em, naFila = st === 'proposta_pendente';
+    function cp(i, r, v, ph, tag) { return '<div class="campo largo"><label for="' + i + '">' + r + '</label>' + (tag === 'ta' ? '<textarea id="' + i + '" rows="2" placeholder="' + esc(ph) + '">' + esc(v || '') + '</textarea>' : '<input id="' + i + '" type="text" autocomplete="off" placeholder="' + esc(ph) + '" value="' + esc(v || '') + '">') + '</div>'; }
+    var h = '<div class="gv-prop"><h3>Proposta</h3>';
+    if (p.proposta_path) {
+      h += '<p class="small" style="margin:0">' + (naFila ? '<strong>Na fila:</strong> sai pelo WhatsApp em até 5 minutos.' : enviada ? 'Enviada em <strong>' + dd(p.proposta_enviada_em) + '</strong>.' : 'Anexada.') +
+        ' Arquivo: ' + esc(p.proposta_nome || 'proposta') + ' <button type="button" class="btn mini" data-act="proposta-abrir" data-id="' + id + '">Abrir</button></p>';
+      if (cad && p.proxima_acao && p.proxima_data) h += '<p class="small faint" style="margin:0">Próximo toque do bot: ' + esc(p.proxima_acao.replace('Proposta ', '').replace('Encerrar proposta', 'encerrar')) + ' em ' + BC.data(p.proxima_data) + '. Se o lead responder, o bot para e você assume.</p>';
+      if (st === 'humano_assumiu' && enviada) h += '<p class="small faint" style="margin:0">O lead respondeu depois da proposta: a conversa é sua.</p>';
+      h += cp('pp-prova', 'Prova para o D5 (texto ou link, do mesmo segmento)', p.proposta_prova, 'Ex.: link do print ou do depoimento de uma clínica odontológica', 'ta') +
+        '<div class="gv-acoes"><button type="button" class="btn mini" data-act="proposta-prova" data-id="' + id + '">Salvar prova</button></div>' +
+        '<p class="small faint" style="margin:0">Sem prova salva, o D5 não sai: o bot pula e te avisa.</p>';
+    }
+    if (!naFila) {
+      h += '<details class="gv-mais"' + (p.proposta_path ? '' : ' open') + '><summary>' + (p.proposta_path ? 'Anexar outra proposta e reenviar' : 'Anexar a proposta e enviar ao lead') + '</summary><div class="gv-mais-corpo">' +
+        '<div class="campo largo"><label for="pp-arquivo">Arquivo da proposta (PDF)</label><input id="pp-arquivo" type="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"></div>' +
+        cp('pp-dia', 'Dia combinado para o retorno', p.proposta_dia, 'Ex.: sexta') +
+        cp('pp-dor', 'Problema (completa "O problema era ...")', p.proposta_dor, 'Ex.: agenda com horário vago por depender de indicação') +
+        cp('pp-caminho', 'Caminho (completa "O caminho é ...")', p.proposta_caminho, 'Ex.: anúncios no Instagram levando direto pro WhatsApp da clínica') +
+        (p.proposta_path ? '' : cp('pp-prova-novo', 'Prova para o D5 (opcional agora)', p.proposta_prova, 'Texto ou link do mesmo segmento', 'ta')) +
+        '<div class="gv-acoes"><button type="button" class="btn mini primario" data-act="proposta-enviar" data-id="' + id + '">Enviar proposta ao lead</button></div>' +
+        '<p class="small faint" style="margin:0">Envie até 2 horas depois da call. O bot manda o resumo, o anexo e depois cobra no D2, D5 e D10.</p></div></details>';
+    }
+    return h + '</div>';
+  };
+  function nomeSeguro(n) { return String(n || 'proposta').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9._-]+/g, '-').slice(-80); }
+  BC.act['proposta-enviar'] = function (el) {
+    var id = el.dataset.id, dlg = el.closest('dialog'), p = S.get('prospects', id); if (!p) return;
+    var arq = dlg.querySelector('#pp-arquivo') && dlg.querySelector('#pp-arquivo').files[0];
+    function v(i) { var x = dlg.querySelector('#' + i); return x ? x.value.trim() : ''; }
+    if (!arq) { BC.toast('Escolha o arquivo da proposta.', true); return; }
+    if (arq.size > 15 * 1024 * 1024) { BC.toast('O arquivo passa de 15 MB.', true); return; }
+    if (!C.telefoneChave(p.telefone)) { BC.toast('Este contato não tem telefone válido.', true); return; }
+    if (!v('pp-dia') || !v('pp-dor') || !v('pp-caminho')) { BC.toast('Preencha o dia combinado, o problema e o caminho.', true); return; }
+    BC.seguro(async function () {
+      var uid = root.BCSupabase.usuarioId(); if (!uid) throw new Error('Sessão expirada, entre de novo.');
+      var caminho = uid + '/' + id + '/' + Date.now() + '-' + nomeSeguro(arq.name);
+      await root.BCSupabase.uploadProposta(caminho, arq);
+      var prova = dlg.querySelector('#pp-prova-novo') ? v('pp-prova-novo') : (p.proposta_prova || '');
+      await S.update('prospects', id, {
+        proposta_path: caminho, proposta_nome: arq.name, proposta_mime: arq.type || 'application/pdf',
+        proposta_dia: v('pp-dia'), proposta_dor: v('pp-dor'), proposta_caminho: v('pp-caminho'), proposta_prova: prova,
+        proposta_solicitada_em: agora(), proposta_enviada_em: null,
+        etapa: 'proposta', sdr_status: 'proposta_pendente', proxima_acao: null, proxima_data: null, humano_ate: null, atualizado_em: agora()
+      });
+      await registra(id, 'nota', 'Proposta anexada (' + arq.name + '). O bot envia em até 5 minutos.');
+      BC.toast('Proposta na fila. Sai pelo WhatsApp em até 5 minutos.'); reabrir(el, id);
+    });
+  };
+  BC.act['proposta-abrir'] = function (el) {
+    var p = S.get('prospects', el.dataset.id); if (!p || !p.proposta_path) return;
+    BC.seguro(async function () { var u = await root.BCSupabase.linkProposta(p.proposta_path); window.open(u, '_blank', 'noopener'); });
+  };
+  BC.act['proposta-prova'] = function (el) {
+    var id = el.dataset.id, x = el.closest('dialog').querySelector('#pp-prova');
+    BC.seguro(async function () {
+      await S.update('prospects', id, { proposta_prova: x ? x.value.trim() : '', atualizado_em: agora() });
+      BC.toast('Prova salva para o D5.'); reabrir(el, id);
+    });
   };
 
   // ───────────── conversa em formato de chat ─────────────
@@ -2328,10 +2411,11 @@ window.BC_CONFIG = {
   var DICAS_ETAPA = {
     novo: 'Antes de abordar, deixe a mensagem de abordagem e o mini-diagnóstico prontos para quando o lead responder.',
     abordado: 'Programe o próximo follow-up. Se ele responder, o mini-diagnóstico já deve estar pronto.',
+    follow_up: 'Cadência em andamento (D2, D4 e D7). O sistema envia sozinho e encerra se não houver resposta.',
     respondeu: 'Ele respondeu: envie o mini-diagnóstico agora.',
     diagnostico: 'Diagnóstico enviado. Próximo passo: propor uma reunião para apresentá-lo.',
     reuniao: 'Depois da reunião, envie a proposta (validade de 7 dias).',
-    proposta: 'Proposta enviada. Cobre o retorno antes de ela vencer.'
+    proposta: 'Proposta enviada. O bot cobra no D2, D5 e D10; se o lead responder, você assume.'
   };
   function idx(etapa) { return C.ORDEM_FUNIL.indexOf(etapa); }
   function maiorEtapa(atual, nova) { return idx(nova) > idx(atual) ? nova : (idx(atual) < 0 ? nova : atual); }
@@ -2352,6 +2436,7 @@ window.BC_CONFIG = {
       BC.sdr.secao(p) +
       (DICAS_ETAPA[p.etapa] ? '<div class="aviso" style="margin:0">' + esc(DICAS_ETAPA[p.etapa]) + '</div>' : '') +
       campo('pr-nome', 'Nome', '<input id="pr-nome" name="nome" type="text" required autocomplete="off" value="' + esc(p.nome || '') + '">') +
+      campo('pr-responsavel', 'Responsável (quem decide)', '<input id="pr-responsavel" name="responsavel" type="text" autocomplete="off" placeholder="Ex.: Dra. Ana" value="' + esc(p.responsavel || '') + '">') +
       campo('pr-negocio', 'Negócio / nicho', '<input id="pr-negocio" name="negocio" type="text" value="' + esc(p.negocio || '') + '">') +
       campo('pr-telefone', 'Telefone / WhatsApp', '<input id="pr-telefone" name="telefone" type="tel" inputmode="tel" data-input="mascara-tel" placeholder="(95) 99999-9999" value="' + esc(BC.tel(p.telefone)) + '">') +
       campo('pr-email', 'E-mail', '<input id="pr-email" name="email" type="email" value="' + esc(p.email || '') + '">') +
@@ -2368,13 +2453,14 @@ window.BC_CONFIG = {
       (p.etapa === 'perdido' ? campo('pr-motivo_perda', 'Motivo da perda', '<input id="pr-motivo_perda" name="motivo_perda" type="text" value="' + esc(p.motivo_perda || '') + '">') : '') +
       '<div class="gv-links">' + BC.iconesContato(p) + '</div>' +
       '<details class="gv-mais"><summary>Mais detalhes</summary><div class="gv-mais-corpo">' +
+      (p.observacao_ia ? campo('pr-observacao_ia', 'Observação da IA (variante D1 e serviço foco)', '<textarea id="pr-observacao_ia" name="observacao_ia" readonly>' + esc(p.observacao_ia) + '</textarea>') : '') +
       campo('pr-nicho', 'Nicho', '<input id="pr-nicho" name="nicho" type="text" value="' + esc(p.nicho || '') + '">') +
       campo('pr-origem', 'Origem', '<select id="pr-origem" name="origem">' + opcoes(ORIGENS, p.origem) + '</select>') +
       campo('pr-campanha', 'Campanha / formulário', '<input id="pr-campanha" name="campanha" type="text" value="' + esc(p.campanha || '') + '">') +
       campo('pr-lista_id', 'Lista', '<select id="pr-lista_id" name="lista_id"><option value="">Sem lista</option>' + opcoes(listas.map(function (l) { return [l.id, l.nome]; }), p.lista_id || '') + '</select>') +
       '</div></details>' +
       '<div class="gv-acoes"><button type="button" class="btn mini primario" data-act="toque" data-id="' + esc(id) + '">Registrar toque</button>' +
-      (p.etapa === 'abordado' || p.etapa === 'novo' ? '<button type="button" class="btn mini" data-act="respondeu" data-id="' + esc(id) + '">Respondeu</button>' : '') +
+      (p.etapa === 'abordado' || p.etapa === 'follow_up' || p.etapa === 'novo' ? '<button type="button" class="btn mini" data-act="respondeu" data-id="' + esc(id) + '">Respondeu</button>' : '') +
       (p.cliente_id ? '<a class="btn mini" href="#c-' + esc(p.cliente_id) + '" data-act="fechar-e-ir">Ver cliente</a>' : (p.etapa !== 'fechado' ? '<button type="button" class="btn mini" data-act="converter" data-id="' + esc(id) + '">Converter em cliente</button>' : '')) +
       (p.etapa !== 'perdido' && p.etapa !== 'fechado' ? '<button type="button" class="btn mini fantasma" data-act="perdido" data-id="' + esc(id) + '">Marcar como perdido</button>' : '') + '</div>' +
       BC.sdr.conversa(id) +
@@ -2402,7 +2488,7 @@ window.BC_CONFIG = {
       nome: nome, negocio: BC.txt(d.negocio), nicho: BC.txt(d.nicho), cidade: BC.txt(d.cidade), estado: BC.txt(d.estado).toUpperCase().slice(0, 2), telefone: telNorm || tel,
       email: BC.txt(d.email).toLowerCase(), instagram: C.normalizarInstagram(d.instagram), canal: d.canal, origem: d.origem, campanha: BC.txt(d.campanha),
       lista_id: d.lista_id || null, etapa: d.etapa, proxima_data: d.proxima_data || null, proxima_acao: BC.txt(d.proxima_acao),
-      abordagem: BC.txt(d.abordagem), diagnostico: BC.txt(d.diagnostico), notas: BC.txt(d.notas), atualizado_em: agora()
+      abordagem: BC.txt(d.abordagem), diagnostico: BC.txt(d.diagnostico), notas: BC.txt(d.notas), responsavel: BC.txt(d.responsavel), atualizado_em: agora()
     };
     if (d.motivo_perda != null) row.motivo_perda = BC.txt(d.motivo_perda);
     BC.seguro(async function () {
@@ -3108,7 +3194,7 @@ window.BC_CONFIG = {
     });
   }
   function quadro(h, todos) {
-    var out = '<div class="quadro">';
+    var out = '<p class="small faint" style="margin:0 0 8px"><strong>Etiquetas da cadência:</strong> D1 abordagem · D2 1º follow-up (1 dia depois) · D4 2º follow-up (3 dias depois) · D7 último follow-up (6 dias depois). Sem resposta, o lead é encerrado 3 dias depois do D7. Depois da proposta: D0 envio, D2 dúvida (2 dias), D5 prova (5 dias), D10 último aviso (10 dias); encerra 3 dias depois.</p><div class="quadro">';
     C.ORDEM_FUNIL.forEach(function (et) {
       var col = todos.filter(function (p) { return p.etapa === et; });
       col.sort(function (a, b) { return (a.proxima_data || '9999') < (b.proxima_data || '9999') ? -1 : 1; });
@@ -3199,7 +3285,7 @@ window.BC_CONFIG = {
     var f = C.funil(todos);
     function taxa(a, b) { return b ? BC.pct(a / b, 0) : '—'; }
     var kpis = [
-      ['Etapas pra hoje', pendentes.length, true], ['No painel', abertos.length], ['Em cadência', abertos.filter(function (p) { return p.etapa === 'abordado'; }).length],
+      ['Etapas pra hoje', pendentes.length, true], ['No painel', abertos.length], ['Em cadência', abertos.filter(function (p) { return p.etapa === 'abordado' || p.etapa === 'follow_up'; }).length],
       ['Taxa de resposta', taxa(f[2].n, f[1].n)], ['Resposta → reunião', taxa(f[4].n, f[2].n)], ['Reunião → cliente', taxa(f[6].n, f[4].n)], ['Fechados', todos.filter(function (p) { return p.etapa === 'fechado'; }).length]
     ];
 
@@ -3224,7 +3310,7 @@ window.BC_CONFIG = {
           (p.abordagem ? '' : ' <span class="tag">sem abordagem</span>') + (p.diagnostico ? '' : ' <span class="tag">sem plano de campanha</span>') + '</div></div>' +
           '<div class="acoes">' + (wa ? '<a class="btn mini" href="' + esc(wa) + '" target="_blank" rel="noopener">WhatsApp</a>' : '') +
           '<button class="btn mini primario" data-act="toque" data-id="' + esc(p.id) + '">Toque</button>' +
-          (p.etapa === 'abordado' || p.etapa === 'novo' ? '<button class="btn mini" data-act="respondeu" data-id="' + esc(p.id) + '">Respondeu</button>' : '') +
+          (p.etapa === 'abordado' || p.etapa === 'follow_up' || p.etapa === 'novo' ? '<button class="btn mini" data-act="respondeu" data-id="' + esc(p.id) + '">Respondeu</button>' : '') +
           '<button class="btn mini fantasma" data-act="abrir-prospect" data-id="' + esc(p.id) + '">Abrir</button></div></li>';
       }).join('') + '</ul>';
     }
